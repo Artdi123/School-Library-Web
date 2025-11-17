@@ -1,3 +1,5 @@
+"use client";
+
 import { cn } from "@/lib/utils";
 import { Button } from "@/app/components/login-ui/button";
 import {
@@ -9,9 +11,54 @@ import {
 } from "@/app/components/login-ui/field";
 import { Input } from "@/app/components/login-ui/input";
 
+
+import { signIn } from "next-auth/react";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
+
+
 export function LoginForm({ className, ...props }) {
+const [error, setError] = useState("");
+const [isLoading, setIsLoading] = useState(false);
+const router = useRouter();
+
+async function handleLogin(formData) {
+  setIsLoading(true);
+  setError("");
+
+  const email = formData.get("email");
+  const password = formData.get("password");
+
+  const response = await signIn("credentials", {
+    redirect: false,
+    email,
+    password,
+  });
+
+  if (response.error) {
+    setError("Email atau password salah");
+    setIsLoading(false);
+    return;
+  }
+
+  const session = await fetch("/api/auth/session").then((res) => res.json());
+
+  console.log(response);  
+
+  if (session?.user?.role === "admin") {
+    router.push("/dashboard");
+  } else {
+    router.push("/");
+  }
+}
+
   return (
-    <form className={cn("flex flex-col gap-6", className)} {...props}>
+    <form
+      action={handleLogin}
+      className={cn("flex flex-col gap-6", className)}
+      {...props}
+    >
       <FieldGroup>
         <div className="flex flex-col items-center gap-1 text-center">
           <h1 className="text-2xl font-bold">Login to your account</h1>
@@ -21,7 +68,13 @@ export function LoginForm({ className, ...props }) {
         </div>
         <Field>
           <FieldLabel htmlFor="email">Email</FieldLabel>
-          <Input id="email" type="email" placeholder="m@example.com" required />
+          <Input
+            id="email"
+            name="email"
+            type="email"
+            placeholder="m@example.com"
+            required
+          />
         </Field>
         <Field>
           <div className="flex items-center">
@@ -33,19 +86,13 @@ export function LoginForm({ className, ...props }) {
               Forgot your password?
             </a>
           </div>
-          <Input id="password" type="password" required />
+          <Input id="password" name="password" type="password" required />
         </Field>
         <Field>
           <Button className="bg-indigo-600" type="submit">
             Login
           </Button>
         </Field>
-        <FieldDescription className="text-center">
-          Don&apos;t have an account?{" "}
-          <a href="#" className="underline underline-offset-4">
-            Sign up
-          </a>
-        </FieldDescription>
       </FieldGroup>
     </form>
   );

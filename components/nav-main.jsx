@@ -19,7 +19,8 @@ import {
 } from "@/components/ui/sidebar"
 
 export function NavMain({
-  items
+  items,
+  setActiveMenu
 }) {
   return (
     <SidebarGroup>
@@ -45,9 +46,14 @@ export function NavMain({
                   {item.items?.map((subItem) => (
                     <SidebarMenuSubItem key={subItem.title}>
                       <SidebarMenuSubButton asChild>
-                        <a href={subItem.url}>
+                        <button
+                          onClick={() => {
+                            const menuKey = subItem.title.toLowerCase().replace(' ', '');
+                            setActiveMenu(menuKey === 'borrowstatus' ? 'borrows' : menuKey);
+                          }}
+                        >
                           <span>{subItem.title}</span>
-                        </a>
+                        </button>
                       </SidebarMenuSubButton>
                     </SidebarMenuSubItem>
                   ))}
