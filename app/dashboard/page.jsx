@@ -33,6 +33,8 @@ import {
   deleteBook,
   updateBorrowStatus,
 } from "@/lib/action";
+import { useSession } from "next-auth/react";
+import { forbidden } from "next/navigation";
 
 export default function DashboardContent() {
   const [activeMenu, setActiveMenu] = useState("users");
@@ -72,9 +74,17 @@ export default function DashboardContent() {
     setBorrows(await getAllBorrows());
   }
 
+  const { data: session, status } = useSession();
+
+  const user = session?.user;
+
+  if (user?.role === "user") {
+    forbidden();
+  }
+
   return (
     <SidebarProvider>
-      <AppSidebar setActiveMenu={setActiveMenu} />
+      <AppSidebar setActiveMenu={setActiveMenu} user={user} />
       <SidebarInset>
         <header className="flex h-16 items-center gap-2 border-b bg-white">
           <div className="flex items-center gap-2 px-6">

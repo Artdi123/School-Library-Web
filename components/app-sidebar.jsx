@@ -24,7 +24,6 @@ import {
   SidebarHeader,
   SidebarRail,
 } from "@/components/ui/sidebar";
-import { useSession } from "next-auth/react";
 
 // This is sample data.
 const data = {
@@ -68,21 +67,13 @@ const data = {
 };
 
 export function AppSidebar({ setActiveMenu, ...props }) {
-  // test
-  const { data: session, status } = useSession();
-
-  console.log("Session:", session);
-
   return (
     <Sidebar collapsible="icon" {...props}>
-      <SidebarHeader>
-        <TeamSwitcher teams={data.teams} />
-      </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} setActiveMenu={setActiveMenu} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={session.user} />
+        <NavUser user={props.user} />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

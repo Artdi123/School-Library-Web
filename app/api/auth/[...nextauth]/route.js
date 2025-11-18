@@ -28,6 +28,7 @@ export const authOption = {
           name: user.username,
           email: user.email,
           role: user.role,
+          image: user.image,
         };
       },
     }),
@@ -42,10 +43,8 @@ export const authOption = {
     },
     async session({ session, token }) {
       // Tambahkan role ke session dari token
-      if (token) {
-        session.user.id = token.id;
-        session.user.role = token.role;
-      }
+      session.user.id = token.id;
+      session.user.role = token.role;
       return session;
     },
   },
