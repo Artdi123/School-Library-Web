@@ -1,32 +1,37 @@
-import { getUserByEmail } from "@/lib/action";
-import { compare } from "bcryptjs";
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import bcrypt from "bcryptjs";
+import { getUserByEmail } from "@/lib/action";
 
-export const authOption = {
-  pages: {
-    signIn: "/login",
-  },
+export const authOptions = {
   providers: [
     CredentialsProvider({
-      async authorize(credentials, req) {
-        // 1. unboxing data email & password
-        const email = credentials.email;
-        const password = credentials.password;
+      name: "Credentials",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error("Email and password required");
+        }
 
-        // 2. cari user berdasarkan emailnya
-        const user = await getUserByEmail(email);
-        if (!user) return null;
+        const user = await getUserByEmail(credentials.email);
 
-        // 3. mengcompare password
-        const isValid = await compare(password, user.password);
-        if (!isValid) return null;
+        if (!user || !user.password) {
+          throw new Error("Invalid email or password");
+        }
 
-        // 4. return user ke session
+        const isValid = bcrypt.compareSync(credentials.password, user.password);
+
+        if (!isValid) {
+          throw new Error("Invalid email or password");
+        }
+
         return {
-          id: user.user_id.toString(),
-          name: user.username,
+          id: user.user_id,
           email: user.email,
+          name: user.username,
           role: user.role,
           image: user.image,
         };
@@ -34,23 +39,41 @@ export const authOption = {
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
-      // Tambahkan role ke token jika user ada (saat login)
+    async jwt({ token, user, trigger, session }) {
+      // Initial sign in
       if (user) {
+        token.id = user.id;
         token.role = user.role;
+        token.image = user.image;
       }
+
+      // Handle session update
+      if (trigger === "update" && session) {
+        token.name = session.user.name;
+        token.image = session.user.image;
+      }
+
       return token;
     },
     async session({ session, token }) {
-      // Tambahkan role ke session dari token
-      session.user.id = token.id;
-      session.user.role = token.role;
+      if (token) {
+        session.user.id = token.id;
+        session.user.role = token.role;
+        session.user.image = token.image;
+        session.user.name = token.name;
+      }
       return session;
     },
   },
+  pages: {
+    signIn: "/login",
+  },
+  session: {
+    strategy: "jwt",
+  },
+  secret: process.env.NEXTAUTH_SECRET,
 };
 
-
-const handler = NextAuth(authOption);
+const handler = NextAuth(authOptions);
 
 export { handler as GET, handler as POST };

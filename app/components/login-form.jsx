@@ -49,7 +49,7 @@ async function handleLogin(formData) {
   if (session?.user?.role === "admin") {
     router.push("/dashboard");
   } else {
-    router.push("/");
+    router.push("/home");
   }
 }
 

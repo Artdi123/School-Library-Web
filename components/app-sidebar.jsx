@@ -3,6 +3,7 @@
 import * as React from "react";
 import {
   AudioWaveform,
+  Book,
   BookOpen,
   Bot,
   Command,
@@ -56,7 +57,7 @@ const data = {
     {
       title: "Borrowings",
       url: "#",
-      icon: Bot,
+      icon: Book,
       items: [
         {
           title: "Borrow status",

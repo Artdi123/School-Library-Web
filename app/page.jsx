@@ -41,7 +41,7 @@ export default function Landing() {
                 <BookOpen className="w-6 h-6 text-white" />
               </div>
               <h1 className="text-2xl font-bold bg-linear-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">
-                School Library
+                Taruna Library
               </h1>
             </div>
             <nav className="hidden md:flex items-center gap-8">
@@ -114,21 +114,21 @@ export default function Landing() {
                   </button>
                 </Link>
                 <Link href="/login">
-                <button className="group bg-white hover:bg-gray-50 text-gray-900 font-semibold py-4 px-8 rounded-2xl border-2 border-gray-200 transition-all duration-300 flex items-center justify-center gap-2">
-                  <Search className="w-5 h-5" />
-                  Search Catalog
+                  <button className="group bg-white hover:bg-gray-50 text-gray-900 font-semibold py-4 px-8 rounded-2xl border-2 border-gray-200 transition-all duration-300 flex items-center justify-center gap-2">
+                    <Search className="w-5 h-5" />
+                    Search Catalog
                   </button>
                 </Link>
               </div>
 
               <div className="flex items-center gap-8 pt-4">
                 <div>
-                  <div className="text-3xl font-bold text-gray-900">10K+</div>
+                  <div className="text-3xl font-bold text-gray-900">100+</div>
                   <div className="text-sm text-gray-600">Books Available</div>
                 </div>
                 <div className="w-px h-12 bg-gray-200"></div>
                 <div>
-                  <div className="text-3xl font-bold text-gray-900">5K+</div>
+                  <div className="text-3xl font-bold text-gray-900">100+</div>
                   <div className="text-sm text-gray-600">Active Members</div>
                 </div>
                 <div className="w-px h-12 bg-gray-200"></div>
@@ -224,7 +224,7 @@ export default function Landing() {
                 Extensive Collection
               </h4>
               <p className="text-gray-600 leading-relaxed">
-                Access over 10,000 books, journals, and digital resources
+                Access over 10            0 books, journals, and digital resources
                 spanning all subjects and academic levels.
               </p>
             </div>
@@ -316,7 +316,7 @@ export default function Landing() {
           <div className="text-center mb-16">
             <h3 className="text-4xl font-bold mb-4">Visit Us Today</h3>
             <p className="text-indigo-100 max-w-2xl mx-auto text-lg">
-              Located in the heart of campus - your next discovery awaits
+              Located in the 3rd floor of school - your next discovery awaits
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 max-w-4xl mx-auto">
@@ -351,14 +351,16 @@ export default function Landing() {
                   <Phone className="w-5 h-5 mt-1 shrink-0" />
                   <div>
                     <div className="font-medium mb-1">Phone</div>
-                    <div className="text-indigo-100">(555) 123-4567</div>
+                    <div className="text-indigo-100">0811-9892-324</div>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
                   <Mail className="w-5 h-5 mt-1 shrink-0" />
                   <div>
                     <div className="font-medium mb-1">Email</div>
-                    <div className="text-indigo-100">library@school.edu</div>
+                    <div className="text-indigo-100">
+                      taruna@smktarunabhakti.net
+                    </div>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
@@ -366,9 +368,8 @@ export default function Landing() {
                   <div>
                     <div className="font-medium mb-1">Address</div>
                     <div className="text-indigo-100">
-                      123 Education Lane
-                      <br />
-                      Learning City, ST 12345
+                      Jl. Pekapuran, RT.02/RW.06, Curug, Kec. Cimanggis, Kota
+                      Depok, Jawa Barat 16953
                     </div>
                   </div>
                 </div>
@@ -386,10 +387,10 @@ export default function Landing() {
               <div className="w-10 h-10 bg-linear-to-br from-indigo-600 to-blue-600 rounded-xl flex items-center justify-center">
                 <BookOpen className="w-6 h-6 text-white" />
               </div>
-              <h1 className="text-2xl font-bold">School Library</h1>
+              <h1 className="text-2xl font-bold">Taruna Library</h1>
             </div>
             <p className="text-gray-400 mb-2">
-              &copy; 2025 School Library. All rights reserved.
+              &copy; 2025 Taruna Library. All rights reserved.
             </p>
             <p className="text-gray-500">
               Empowering minds through knowledge and discovery.

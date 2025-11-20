@@ -35,6 +35,7 @@ import {
 } from "@/lib/action";
 import { useSession } from "next-auth/react";
 import { forbidden } from "next/navigation";
+import { Book, User, CheckCircle } from "lucide-react";
 
 export default function DashboardContent() {
   const [activeMenu, setActiveMenu] = useState("users");
@@ -42,14 +43,14 @@ export default function DashboardContent() {
   const [books, setBooks] = useState([]);
   const [borrows, setBorrows] = useState([]);
   const [isPending, startTransition] = useTransition();
-
   const [showAddUserModal, setShowAddUserModal] = useState(false);
   const [showEditUserModal, setShowEditUserModal] = useState(false);
   const [editUser, setEditUser] = useState(null);
-
   const [showAddBookModal, setShowAddBookModal] = useState(false);
   const [showEditBookModal, setShowEditBookModal] = useState(false);
   const [editBook, setEditBook] = useState(null);
+  const [updatingStatus, setUpdatingStatus] = useState(null);
+  const [statusSuccess, setStatusSuccess] = useState(false);
 
   useEffect(() => {
     startTransition(async () => {
@@ -70,9 +71,34 @@ export default function DashboardContent() {
   }
 
   async function handleStatusChange(id, status) {
-    await updateBorrowStatus(id, status);
-    setBorrows(await getAllBorrows());
+    setUpdatingStatus(id);
+    try {
+      const result = await updateBorrowStatus(id, status);
+      if (result.success) {
+        const updatedBorrows = await getAllBorrows();
+        setBorrows(updatedBorrows);
+        setStatusSuccess(true);
+        setTimeout(() => setStatusSuccess(false), 3000);
+      } else {
+        alert(result.message || "Failed to update status");
+      }
+    } catch (error) {
+      console.error("Error updating status:", error);
+      alert("An error occurred while updating the status");
+    } finally {
+      setUpdatingStatus(null);
+    }
   }
+
+  const formatDate = (date) => {
+    if (!date) return "-";
+    const d = new Date(date);
+    return d.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
 
   const { data: session, status } = useSession();
 
@@ -102,7 +128,7 @@ export default function DashboardContent() {
                 </BreadcrumbItem>
                 <BreadcrumbSeparator className="hidden md:block" />
                 <BreadcrumbItem>
-                  <BreadcrumbPage className="text-indigo-600 font-medium capitalize">
+                  <BreadcrumbPage className="bg-linear-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent font-medium capitalize">
                     {activeMenu}
                   </BreadcrumbPage>
                 </BreadcrumbItem>
@@ -110,6 +136,19 @@ export default function DashboardContent() {
             </Breadcrumb>
           </div>
         </header>
+
+        {/* Success Notification */}
+        {statusSuccess && (
+          <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-top-5">
+            <div className="bg-green-500 text-white px-6 py-4 rounded-xl shadow-lg flex items-center gap-3">
+              <CheckCircle className="w-6 h-6" />
+              <div>
+                <p className="font-semibold">Status updated successfully!</p>
+                <p className="text-sm text-green-100">Borrow record updated</p>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="flex flex-1 flex-col gap-6 p-6 bg-gray-50 min-h-screen">
           {/* USERS */}
@@ -197,13 +236,7 @@ export default function DashboardContent() {
                             />
                           ) : (
                             <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
-                              <svg
-                                className="w-5 h-5 text-gray-400"
-                                fill="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path d="M24 20.993V24H0v-2.996A14.977 14.977 0 01112 15c4.418 0 8.418 1.955 11.001 5.993zM16 9a4 4 0 11-8 0 4 4 0 018 0z" />
-                              </svg>
+                              <User className="w-5 h-5 text-gray-400"></User>
                             </div>
                           )}
                         </td>
@@ -318,13 +351,7 @@ export default function DashboardContent() {
                             />
                           ) : (
                             <div className="w-10 h-10 rounded bg-gray-200 flex items-center justify-center">
-                              <svg
-                                className="w-5 h-5 text-gray-400"
-                                fill="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path d="M4 4h16v16H4V4zm2 2v12h12V6H6zm2 2h8v8H8V8zm1 1v6h6V9H9z" />
-                              </svg>
+                              <Book className="w-5 h-5 text-gray-400" />
                             </div>
                           )}
                         </td>
@@ -406,29 +433,45 @@ export default function DashboardContent() {
                         </td>
                         <td className="p-4 text-gray-700">{br.book_name}</td>
                         <td className="p-4 text-gray-700">
-                          {br.borrow_date || "-"}
+                          {formatDate(br.borrow_date)}
                         </td>
                         <td className="p-4 text-gray-700">
-                          {br.return_date || "-"}
+                          {formatDate(br.return_date)}
                         </td>
                         <td className="p-4">
-                          <select
-                            value={br.status}
-                            onChange={(e) =>
-                              handleStatusChange(br.borrow_id, e.target.value)
-                            }
-                            className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                          >
-                            <option value="pending" className="text-yellow-600">
-                              Pending
-                            </option>
-                            <option value="progress" className="text-blue-600">
-                              Progress
-                            </option>
-                            <option value="closed" className="text-green-600">
-                              Closed
-                            </option>
-                          </select>
+                          <div className="flex items-center gap-2">
+                            <select
+                              value={br.status}
+                              onChange={(e) =>
+                                handleStatusChange(br.borrow_id, e.target.value)
+                              }
+                              disabled={updatingStatus === br.borrow_id}
+                              className={`border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors ${
+                                updatingStatus === br.borrow_id
+                                  ? "opacity-50 cursor-not-allowed"
+                                  : ""
+                              }`}
+                            >
+                              <option
+                                value="pending"
+                                className="text-yellow-600"
+                              >
+                                Pending
+                              </option>
+                              <option
+                                value="progress"
+                                className="text-blue-600"
+                              >
+                                Progress
+                              </option>
+                              <option value="closed" className="text-green-600">
+                                Closed
+                              </option>
+                            </select>
+                            {updatingStatus === br.borrow_id && (
+                              <div className="w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -516,7 +559,6 @@ export default function DashboardContent() {
               action={(formData) => updateUser(editUser.user_id, formData)}
               className="space-y-4"
             >
-              {/* FIX: keep existing image */}
               <input type="hidden" name="currentImage" value={editUser.image} />
 
               <div>
@@ -649,7 +691,6 @@ export default function DashboardContent() {
               action={(formData) => updateBook(editBook.book_id, formData)}
               className="space-y-4"
             >
-              {/* FIX: keep existing image */}
               <input type="hidden" name="currentImage" value={editBook.image} />
 
               <div>
