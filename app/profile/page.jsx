@@ -125,7 +125,7 @@ export default function UserProfile() {
 
   if (!session) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-blue-50 to-white flex items-center justify-center">
+      <div className="min-h-screen bg-linear-to-br from-indigo-50 via-blue-50 to-white flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-600 font-medium">Loading profile...</p>
@@ -137,7 +137,7 @@ export default function UserProfile() {
   const displayImage = previewImage || user?.image;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-blue-50 to-white">
+    <div className="min-h-screen bg-linear-to-br from-indigo-50 via-blue-50 to-white">
       {/* Success Notification */}
       {showSuccess && (
         <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-top-5">
@@ -154,7 +154,7 @@ export default function UserProfile() {
       )}
 
       {/* Header */}
-      <header className="bg-gradient-to-r from-indigo-600 to-blue-600 shadow-xl">
+      <header className="bg-linear-to-r from-indigo-600 to-blue-600 shadow-xl">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <div className="flex items-center gap-3">
@@ -218,7 +218,7 @@ export default function UserProfile() {
         {/* Profile Card */}
         <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
           {/* Card Header */}
-          <div className="bg-gradient-to-r from-indigo-600 to-blue-600 p-8 relative">
+          <div className="bg-linear-to-r from-indigo-600 to-blue-600 p-8 relative">
             <div className="absolute top-6 right-6">
               {!isEditing ? (
                 <button
@@ -257,7 +257,7 @@ export default function UserProfile() {
                       className="rounded-full border-4 border-indigo-100 shadow-lg object-cover w-40 h-40"
                     />
                   ) : (
-                    <div className="w-40 h-40 rounded-full bg-gradient-to-br from-indigo-100 to-blue-100 flex items-center justify-center border-4 border-indigo-100 shadow-lg">
+                    <div className="w-40 h-40 rounded-full bg-linear-to-br from-indigo-100 to-blue-100 flex items-center justify-center border-4 border-indigo-100 shadow-lg">
                       <User className="w-20 h-20 text-indigo-400" />
                     </div>
                   )}
@@ -352,7 +352,7 @@ export default function UserProfile() {
                 <button
                   type="submit"
                   disabled={isSaving}
-                  className="flex-1 px-6 py-3 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white font-medium rounded-xl transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="flex-1 px-6 py-3 bg-linear-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white font-medium rounded-xl transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {isSaving ? (
                     <>
@@ -373,7 +373,7 @@ export default function UserProfile() {
 
         {/* Danger Zone */}
         <div className="mt-8 bg-white rounded-2xl shadow-lg border border-red-100 overflow-hidden">
-          <div className="bg-gradient-to-r from-red-50 to-pink-50 p-6 border-b border-red-100">
+          <div className="bg-linear-to-r from-red-50 to-pink-50 p-6 border-b border-red-100">
             <h3 className="text-lg font-bold text-red-900">Account Sign Out</h3>
           </div>
           <div className="p-6">
