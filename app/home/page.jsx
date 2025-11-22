@@ -17,8 +17,15 @@ import {
   AlertCircle,
   CheckCircle,
   Clock,
+  Bookmark,
+  Bell,
 } from "lucide-react";
-import { getBooks, getUserBorrows, borrowBook } from "@/lib/action";
+import {
+  getBooks,
+  getUserBorrows,
+  borrowBook,
+  getUnreadNotificationCount,
+} from "@/lib/action";
 
 export default function UserDashboard() {
   const { data: session, status } = useSession();
@@ -26,8 +33,8 @@ export default function UserDashboard() {
   const [borrows, setBorrows] = useState([]);
   const [isPending, startTransition] = useTransition();
   const [searchQuery, setSearchQuery] = useState("");
+  const [unreadCount, setUnreadCount] = useState(0);
 
-  // Modal states
   const [showModal, setShowModal] = useState(false);
   const [selectedBook, setSelectedBook] = useState(null);
   const [borrowing, setBorrowing] = useState(false);
@@ -55,6 +62,8 @@ export default function UserDashboard() {
         if (userId) {
           const userBorrows = await getUserBorrows(userId);
           setBorrows(userBorrows);
+          const count = await getUnreadNotificationCount(userId);
+          setUnreadCount(count);
         }
       });
     }
@@ -76,7 +85,6 @@ export default function UserDashboard() {
 
   async function confirmBorrow() {
     const userId = user?.id || user?.user_id || user?.sub;
-
     if (!userId || !selectedBook) return;
 
     setBorrowing(true);
@@ -87,11 +95,11 @@ export default function UserDashboard() {
       const allBooks = await getBooks();
       setBooks(allBooks);
 
-      const userId = user?.id || user?.user_id || user?.sub;
-      if (userId) {
-        const userBorrows = await getUserBorrows(userId);
-        setBorrows(userBorrows);
-      }
+      const userBorrows = await getUserBorrows(userId);
+      setBorrows(userBorrows);
+
+      const count = await getUnreadNotificationCount(userId);
+      setUnreadCount(count);
 
       setShowModal(false);
       setSelectedBook(null);
@@ -115,21 +123,9 @@ export default function UserDashboard() {
 
   const getStatusBadge = (status) => {
     const styles = {
-      pending: {
-        bg: "bg-yellow-100",
-        text: "text-yellow-800",
-        icon: Clock,
-      },
-      progress: {
-        bg: "bg-blue-100",
-        text: "text-blue-800",
-        icon: BookOpen,
-      },
-      closed: {
-        bg: "bg-green-100",
-        text: "text-green-800",
-        icon: CheckCircle,
-      },
+      pending: { bg: "bg-yellow-100", text: "text-yellow-800", icon: Clock },
+      progress: { bg: "bg-blue-100", text: "text-blue-800", icon: BookOpen },
+      closed: { bg: "bg-green-100", text: "text-green-800", icon: CheckCircle },
     };
     return styles[status] || styles.pending;
   };
@@ -147,7 +143,6 @@ export default function UserDashboard() {
 
   return (
     <div className="min-h-screen bg-linear-to-br from-indigo-50 via-blue-50 to-white">
-      {/* Success Notification */}
       {borrowSuccess && (
         <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-top-5">
           <div className="bg-green-500 text-white px-6 py-4 rounded-xl shadow-lg flex items-center gap-3">
@@ -162,7 +157,7 @@ export default function UserDashboard() {
         </div>
       )}
 
-      {/* Hero Header */}
+      {/* Header */}
       <header className="bg-linear-to-r from-indigo-600 to-blue-600 shadow-xl">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
@@ -185,6 +180,23 @@ export default function UserDashboard() {
                 className="text-white font-medium hover:text-indigo-100 transition-colors"
               >
                 Home
+              </Link>
+              <Link
+                href="/bookmarks"
+                className="text-white font-medium hover:text-indigo-100 transition-colors"
+              >
+                Bookmarks
+              </Link>
+              <Link
+                href="/notifications"
+                className="text-white font-medium hover:text-indigo-100 transition-colors relative"
+              >
+                Notifications
+                {unreadCount > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
+                    {unreadCount}
+                  </span>
+                )}
               </Link>
               <Link
                 href="/profile"
@@ -224,13 +236,32 @@ export default function UserDashboard() {
                   <p className="text-indigo-100 mt-1">{user?.email}</p>
                 </div>
               </div>
-              <Link
-                href="/profile"
-                className="flex items-center gap-2 bg-white text-indigo-600 px-6 py-3 rounded-xl font-medium hover:bg-indigo-50 transition-all shadow-lg hover:shadow-xl"
-              >
-                <Edit className="w-4 h-4" />
-                Edit Profile
-              </Link>
+              <div className="flex items-center gap-4">
+                <Link
+                  href="/bookmarks"
+                  className="text-white hover:text-indigo-100 transition-colors p-2 hover:bg-white/10 rounded-lg"
+                >
+                  <Bookmark className="w-6 h-6" />
+                </Link>
+                <Link
+                  href="/notifications"
+                  className="text-white hover:text-indigo-100 transition-colors relative p-2 hover:bg-white/10 rounded-lg"
+                >
+                  <Bell className="w-6 h-6" />
+                  {unreadCount > 0 && (
+                    <span className="absolute top-0 right-0 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
+                      {unreadCount}
+                    </span>
+                  )}
+                </Link>
+                <Link
+                  href="/profile"
+                  className="flex items-center gap-2 bg-white text-indigo-600 px-6 py-3 rounded-xl font-medium hover:bg-indigo-50 transition-all shadow-lg hover:shadow-xl"
+                >
+                  <Edit className="w-4 h-4" />
+                  Edit Profile
+                </Link>
+              </div>
             </div>
           </div>
         </div>
@@ -296,8 +327,6 @@ export default function UserDashboard() {
                   <Book className="w-6 h-6" />
                   Browse Available Books
                 </h3>
-
-                {/* Search Bar */}
                 <div className="relative">
                   <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-indigo-600 w-5 h-5" />
                   <input
@@ -433,11 +462,19 @@ export default function UserDashboard() {
                     {borrows.map((borrow) => {
                       const statusInfo = getStatusBadge(borrow.status);
                       const StatusIcon = statusInfo.icon;
+                      const isOverdue =
+                        borrow.due_date &&
+                        borrow.status !== "closed" &&
+                        new Date() > new Date(borrow.due_date);
 
                       return (
                         <div
                           key={borrow.borrow_id}
-                          className="bg-linear-to-br from-gray-50 to-white rounded-xl p-4 border border-gray-200 hover:shadow-md transition-all"
+                          className={`bg-linear-to-br from-gray-50 to-white rounded-xl p-4 border ${
+                            isOverdue
+                              ? "border-red-200 bg-red-50"
+                              : "border-gray-200"
+                          } hover:shadow-md transition-all`}
                         >
                           <h4 className="font-semibold text-gray-900 text-sm mb-2 line-clamp-1">
                             {borrow.book_name}
@@ -447,10 +484,29 @@ export default function UserDashboard() {
                               <span className="font-medium">Borrowed:</span>
                               <span>{formatDate(borrow.borrow_date)}</span>
                             </div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium">Due:</span>
+                              <span
+                                className={
+                                  isOverdue ? "text-red-600 font-semibold" : ""
+                                }
+                              >
+                                {formatDate(borrow.due_date)}
+                              </span>
+                              {isOverdue && (
+                                <AlertCircle className="w-3 h-3 text-red-500" />
+                              )}
+                            </div>
                             {borrow.return_date && (
                               <div className="flex items-center gap-2">
                                 <span className="font-medium">Returned:</span>
                                 <span>{formatDate(borrow.return_date)}</span>
+                              </div>
+                            )}
+                            {borrow.fine > 0 && (
+                              <div className="flex items-center gap-2 text-red-600 font-medium">
+                                <span>Fine:</span>
+                                <span>Rp {borrow.fine.toLocaleString()}</span>
                               </div>
                             )}
                           </div>
@@ -476,7 +532,6 @@ export default function UserDashboard() {
       {showModal && selectedBook && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden animate-in fade-in zoom-in duration-200">
-            {/* Modal Header */}
             <div className="bg-linear-to-r from-indigo-600 to-blue-600 p-6 relative">
               <button
                 onClick={closeBorrowModal}
@@ -500,7 +555,6 @@ export default function UserDashboard() {
               </div>
             </div>
 
-            {/* Modal Body */}
             <div className="p-6">
               <div className="flex gap-4 mb-6">
                 {selectedBook.image ? (
@@ -536,11 +590,10 @@ export default function UserDashboard() {
                   <span className="font-semibold">{selectedBook.name}</span>?
                   This book will be added to your active borrows with a{" "}
                   <span className="font-semibold text-yellow-700">pending</span>{" "}
-                  status.
+                  status. Due date will be 14 days from approval.
                 </p>
               </div>
 
-              {/* Modal Actions */}
               <div className="flex gap-3">
                 <button
                   onClick={closeBorrowModal}

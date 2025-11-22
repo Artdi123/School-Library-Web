@@ -35,7 +35,14 @@ import {
 } from "@/lib/action";
 import { useSession } from "next-auth/react";
 import { forbidden } from "next/navigation";
-import { Book, User, CheckCircle } from "lucide-react";
+import {
+  Book,
+  User,
+  CheckCircle,
+  AlertTriangle,
+  Calendar,
+  DollarSign,
+} from "lucide-react";
 
 export default function DashboardContent() {
   const [activeMenu, setActiveMenu] = useState("users");
@@ -72,22 +79,14 @@ export default function DashboardContent() {
 
   async function handleStatusChange(id, status) {
     setUpdatingStatus(id);
-    try {
-      const result = await updateBorrowStatus(id, status);
-      if (result.success) {
-        const updatedBorrows = await getAllBorrows();
-        setBorrows(updatedBorrows);
-        setStatusSuccess(true);
-        setTimeout(() => setStatusSuccess(false), 3000);
-      } else {
-        alert(result.message || "Failed to update status");
-      }
-    } catch (error) {
-      console.error("Error updating status:", error);
-      alert("An error occurred while updating the status");
-    } finally {
-      setUpdatingStatus(null);
+    const result = await updateBorrowStatus(id, status);
+    if (result.success) {
+      const updatedBorrows = await getAllBorrows();
+      setBorrows(updatedBorrows);
+      setStatusSuccess(true);
+      setTimeout(() => setStatusSuccess(false), 3000);
     }
+    setUpdatingStatus(null);
   }
 
   const formatDate = (date) => {
@@ -100,8 +99,12 @@ export default function DashboardContent() {
     });
   };
 
-  const { data: session, status } = useSession();
+  const isOverdue = (dueDate, status) => {
+    if (status === "closed" || !dueDate) return false;
+    return new Date() > new Date(dueDate);
+  };
 
+  const { data: session, status } = useSession();
   const user = session?.user;
 
   if (user?.role === "user") {
@@ -137,7 +140,6 @@ export default function DashboardContent() {
           </div>
         </header>
 
-        {/* Success Notification */}
         {statusSuccess && (
           <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-top-5">
             <div className="bg-green-500 text-white px-6 py-4 rounded-xl shadow-lg flex items-center gap-3">
@@ -236,7 +238,7 @@ export default function DashboardContent() {
                             />
                           ) : (
                             <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
-                              <User className="w-5 h-5 text-gray-400"></User>
+                              <User className="w-5 h-5 text-gray-400" />
                             </div>
                           )}
                         </td>
@@ -247,13 +249,13 @@ export default function DashboardContent() {
                                 setEditUser(u);
                                 setShowEditUserModal(true);
                               }}
-                              className="text-indigo-600 hover:text-indigo-800 font-medium transition-colors flex items-center gap-1"
+                              className="text-indigo-600 hover:text-indigo-800 font-medium transition-colors"
                             >
                               Edit
                             </button>
                             <button
                               onClick={() => handleDeleteUser(u.user_id)}
-                              className="text-red-600 hover:text-red-800 font-medium transition-colors flex items-center gap-1"
+                              className="text-red-600 hover:text-red-800 font-medium transition-colors"
                             >
                               Delete
                             </button>
@@ -362,13 +364,13 @@ export default function DashboardContent() {
                                 setEditBook(b);
                                 setShowEditBookModal(true);
                               }}
-                              className="text-indigo-600 hover:text-indigo-800 font-medium transition-colors flex items-center gap-1"
+                              className="text-indigo-600 hover:text-indigo-800 font-medium transition-colors"
                             >
                               Edit
                             </button>
                             <button
                               onClick={() => handleDeleteBook(b.book_id)}
-                              className="text-red-600 hover:text-red-800 font-medium transition-colors flex items-center gap-1"
+                              className="text-red-600 hover:text-red-800 font-medium transition-colors"
                             >
                               Delete
                             </button>
@@ -412,7 +414,13 @@ export default function DashboardContent() {
                         Borrow Date
                       </th>
                       <th className="text-left p-4 font-semibold text-gray-700">
+                        Due Date
+                      </th>
+                      <th className="text-left p-4 font-semibold text-gray-700">
                         Return Date
+                      </th>
+                      <th className="text-left p-4 font-semibold text-gray-700">
+                        Fine
                       </th>
                       <th className="text-left p-4 font-semibold text-gray-700">
                         Status
@@ -423,7 +431,9 @@ export default function DashboardContent() {
                     {borrows.map((br) => (
                       <tr
                         key={br.borrow_id}
-                        className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
+                        className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${
+                          isOverdue(br.due_date, br.status) ? "bg-red-50" : ""
+                        }`}
                       >
                         <td className="p-4 text-gray-700 font-mono">
                           #{br.borrow_id}
@@ -435,8 +445,35 @@ export default function DashboardContent() {
                         <td className="p-4 text-gray-700">
                           {formatDate(br.borrow_date)}
                         </td>
+                        <td className="p-4">
+                          <div className="flex items-center gap-2">
+                            <Calendar className="w-4 h-4 text-gray-400" />
+                            <span
+                              className={
+                                isOverdue(br.due_date, br.status)
+                                  ? "text-red-600 font-medium"
+                                  : "text-gray-700"
+                              }
+                            >
+                              {formatDate(br.due_date)}
+                            </span>
+                            {isOverdue(br.due_date, br.status) && (
+                              <AlertTriangle className="w-4 h-4 text-red-500" />
+                            )}
+                          </div>
+                        </td>
                         <td className="p-4 text-gray-700">
                           {formatDate(br.return_date)}
+                        </td>
+                        <td className="p-4">
+                          {br.fine > 0 ? (
+                            <div className="flex items-center gap-1 text-red-600 font-medium">
+                              <DollarSign className="w-4 h-4" />
+                              Rp {br.fine.toLocaleString()}
+                            </div>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
                         </td>
                         <td className="p-4">
                           <div className="flex items-center gap-2">
@@ -452,21 +489,9 @@ export default function DashboardContent() {
                                   : ""
                               }`}
                             >
-                              <option
-                                value="pending"
-                                className="text-yellow-600"
-                              >
-                                Pending
-                              </option>
-                              <option
-                                value="progress"
-                                className="text-blue-600"
-                              >
-                                Progress
-                              </option>
-                              <option value="closed" className="text-green-600">
-                                Closed
-                              </option>
+                              <option value="pending">Pending</option>
+                              <option value="progress">Progress</option>
+                              <option value="closed">Closed</option>
                             </select>
                             {updatingStatus === br.borrow_id && (
                               <div className="w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
@@ -482,9 +507,7 @@ export default function DashboardContent() {
           )}
         </div>
 
-        {/* ADD + EDIT MODALS */}
-
-        {/* Add User */}
+        {/* ADD USER MODAL */}
         {showAddUserModal && (
           <Modal
             title="Add New User"
@@ -552,15 +575,18 @@ export default function DashboardContent() {
           </Modal>
         )}
 
-        {/* Edit User */}
+        {/* EDIT USER MODAL */}
         {showEditUserModal && editUser && (
           <Modal title="Edit User" onClose={() => setShowEditUserModal(false)}>
             <form
               action={(formData) => updateUser(editUser.user_id, formData)}
               className="space-y-4"
             >
-              <input type="hidden" name="currentImage" value={editUser.image} />
-
+              <input
+                type="hidden"
+                name="currentImage"
+                value={editUser.image || ""}
+              />
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Username
@@ -609,7 +635,7 @@ export default function DashboardContent() {
           </Modal>
         )}
 
-        {/* Add Book */}
+        {/* ADD BOOK MODAL */}
         {showAddBookModal && (
           <Modal
             title="Add New Book"
@@ -684,15 +710,18 @@ export default function DashboardContent() {
           </Modal>
         )}
 
-        {/* Edit Book */}
+        {/* EDIT BOOK MODAL */}
         {showEditBookModal && editBook && (
           <Modal title="Edit Book" onClose={() => setShowEditBookModal(false)}>
             <form
               action={(formData) => updateBook(editBook.book_id, formData)}
               className="space-y-4"
             >
-              <input type="hidden" name="currentImage" value={editBook.image} />
-
+              <input
+                type="hidden"
+                name="currentImage"
+                value={editBook.image || ""}
+              />
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Book Name
@@ -739,6 +768,7 @@ export default function DashboardContent() {
                 </label>
                 <input
                   name="stock"
+                  type="number"
                   defaultValue={editBook.stock}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
                 />

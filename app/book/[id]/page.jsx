@@ -17,10 +17,20 @@ import {
   CheckCircle,
   AlertCircle,
   Clock,
-  ShoppingCart,
   BookUp,
+  Bookmark,
+  BookmarkCheck,
+  Bell,
 } from "lucide-react";
-import { getBookById, borrowBook, getUserBorrows } from "@/lib/action";
+import {
+  getBookById,
+  borrowBook,
+  getUserBorrows,
+  addBookmark,
+  removeBookmark,
+  isBookmarked,
+  getUnreadNotificationCount,
+} from "@/lib/action";
 
 export default function BookDetail({ params }) {
   const { data: session, status } = useSession();
@@ -31,6 +41,10 @@ export default function BookDetail({ params }) {
   const [borrowSuccess, setShowSuccess] = useState(false);
   const [userBorrows, setUserBorrows] = useState([]);
   const [showModal, setShowModal] = useState(false);
+  const [bookmarked, setBookmarked] = useState(false);
+  const [bookmarkLoading, setBookmarkLoading] = useState(false);
+  const [bookmarkSuccess, setBookmarkSuccess] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const user = session?.user;
   const { id: bookId } = use(params);
@@ -45,6 +59,14 @@ export default function BookDetail({ params }) {
           const userId = user?.id || user?.user_id || user?.sub;
           const borrows = await getUserBorrows(userId);
           setUserBorrows(borrows);
+
+          // Check if book is bookmarked
+          const isBookmarkedStatus = await isBookmarked(userId, bookId);
+          setBookmarked(isBookmarkedStatus);
+
+          // Get unread notification count
+          const count = await getUnreadNotificationCount(userId);
+          setUnreadCount(count);
         }
       } catch (error) {
         console.error("Error loading book:", error);
@@ -89,6 +111,30 @@ export default function BookDetail({ params }) {
       alert("Failed to borrow book. Please try again.");
     } finally {
       setBorrowing(false);
+    }
+  };
+
+  const handleBookmarkToggle = async () => {
+    const userId = user?.id || user?.user_id || user?.sub;
+    if (!userId || !book) return;
+
+    setBookmarkLoading(true);
+
+    try {
+      if (bookmarked) {
+        await removeBookmark(userId, book.book_id);
+        setBookmarked(false);
+      } else {
+        await addBookmark(userId, book.book_id);
+        setBookmarked(true);
+        setBookmarkSuccess(true);
+        setTimeout(() => setBookmarkSuccess(false), 2000);
+      }
+    } catch (error) {
+      console.error("Error toggling bookmark:", error);
+      alert("Failed to update bookmark. Please try again.");
+    } finally {
+      setBookmarkLoading(false);
     }
   };
 
@@ -151,6 +197,21 @@ export default function BookDetail({ params }) {
         </div>
       )}
 
+      {/* Bookmark Success Notification */}
+      {bookmarkSuccess && (
+        <div className="fixed top-20 right-4 z-50 animate-in slide-in-from-top-5">
+          <div className="bg-purple-500 text-white px-6 py-4 rounded-xl shadow-lg flex items-center gap-3">
+            <BookmarkCheck className="w-6 h-6" />
+            <div>
+              <p className="font-semibold">Added to bookmarks!</p>
+              <p className="text-sm text-purple-100">
+                View in your bookmarks page
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <header className="bg-linear-to-r from-indigo-600 to-blue-600 shadow-xl">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -174,6 +235,23 @@ export default function BookDetail({ params }) {
                 className="text-white font-medium hover:text-indigo-100 transition-colors"
               >
                 Home
+              </Link>
+              <Link
+                href="/bookmarks"
+                className="text-white font-medium hover:text-indigo-100 transition-colors"
+              >
+                Bookmarks
+              </Link>
+              <Link
+                href="/notifications"
+                className="text-white font-medium hover:text-indigo-100 transition-colors relative"
+              >
+                Notifications
+                {unreadCount > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
+                    {unreadCount}
+                  </span>
+                )}
               </Link>
               <Link
                 href="/profile"
@@ -202,19 +280,40 @@ export default function BookDetail({ params }) {
             {/* Book Image */}
             <div className="md:col-span-1">
               <div className="sticky top-8">
-                {book.image ? (
-                  <Image
-                    src={book.image}
-                    alt={book.name}
-                    width={400}
-                    height={550}
-                    className="rounded-xl shadow-2xl object-cover w-full"
-                  />
-                ) : (
-                  <div className="w-full aspect-3/4 bg-linear-to-br from-indigo-100 to-blue-100 rounded-xl flex items-center justify-center shadow-2xl">
-                    <Book className="w-32 h-32 text-indigo-400" />
-                  </div>
-                )}
+                <div className="relative">
+                  {book.image ? (
+                    <Image
+                      src={book.image}
+                      alt={book.name}
+                      width={400}
+                      height={550}
+                      className="rounded-xl shadow-2xl object-cover w-full"
+                    />
+                  ) : (
+                    <div className="w-full aspect-3/4 bg-linear-to-br from-indigo-100 to-blue-100 rounded-xl flex items-center justify-center shadow-2xl">
+                      <Book className="w-32 h-32 text-indigo-400" />
+                    </div>
+                  )}
+
+                  {/* Bookmark Button Overlay */}
+                  <button
+                    onClick={handleBookmarkToggle}
+                    disabled={bookmarkLoading}
+                    className={`absolute top-4 right-4 p-3 rounded-full shadow-lg transition-all ${
+                      bookmarked
+                        ? "bg-yellow-500 hover:bg-yellow-600 text-white"
+                        : "bg-white/90 hover:bg-white text-gray-700 hover:text-yellow-500"
+                    } disabled:opacity-50`}
+                  >
+                    {bookmarkLoading ? (
+                      <div className="w-6 h-6 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                    ) : bookmarked ? (
+                      <BookmarkCheck className="w-6 h-6" />
+                    ) : (
+                      <Bookmark className="w-6 h-6" />
+                    )}
+                  </button>
+                </div>
 
                 {/* Stock Badge */}
                 <div className="mt-6">
@@ -235,6 +334,16 @@ export default function BookDetail({ params }) {
                     </span>
                   </div>
                 </div>
+
+                {/* Bookmark Status */}
+                {bookmarked && (
+                  <div className="mt-4">
+                    <div className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-medium bg-purple-50 text-purple-700 border border-purple-200">
+                      <BookmarkCheck className="w-5 h-5" />
+                      <span>Saved to Bookmarks</span>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -424,7 +533,7 @@ export default function BookDetail({ params }) {
                     className="rounded-lg shadow-md object-cover"
                   />
                 ) : (
-                  <div className="w-20 h-28 bg-linear-to-br from-indigo-100 to-blue-100 rounded-lg flex items-center justify-center shadoshrink-0">
+                  <div className="w-20 h-28 bg-linear-to-br from-indigo-100 to-blue-100 rounded-lg flex items-center justify-center shadow-md shrink-0">
                     <Book className="w-10 h-10 text-indigo-400" />
                   </div>
                 )}
