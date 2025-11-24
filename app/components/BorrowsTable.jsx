@@ -97,28 +97,28 @@ export default function BorrowsTable({
     switch (status) {
       case "pending":
         return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold bg-gradient-to-r from-yellow-100 to-amber-100 text-yellow-700 border-2 border-yellow-200">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold bg-linear-to-r from-yellow-100 to-amber-100 text-yellow-700 border-2 border-yellow-200">
             <Clock className="w-4 h-4" />
             Pending
           </span>
         );
       case "progress":
         return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-700 border-2 border-blue-200">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold bg-linear-to-r from-blue-100 to-cyan-100 text-blue-700 border-2 border-blue-200">
             <TrendingUp className="w-4 h-4" />
             In Progress
           </span>
         );
       case "closed":
         return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold bg-gradient-to-r from-green-100 to-emerald-100 text-green-700 border-2 border-green-200">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold bg-linear-to-r from-green-100 to-emerald-100 text-green-700 border-2 border-green-200">
             <CheckCircle className="w-4 h-4" />
             Closed
           </span>
         );
       case "rejected":
         return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold bg-gradient-to-r from-red-100 to-rose-100 text-red-700 border-2 border-red-200">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold bg-linear-to-r from-red-100 to-rose-100 text-red-700 border-2 border-red-200">
             <X className="w-4 h-4" />
             Rejected
           </span>
@@ -145,7 +145,7 @@ export default function BorrowsTable({
             <button
               onClick={() => onStatusChange(borrow.borrow_id, "progress")}
               disabled={isUpdating}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold bg-gradient-to-r from-green-500 to-green-600 text-white border-2 border-green-600 hover:from-green-600 hover:to-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm hover:shadow-md"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold bg-linear-to-r from-green-500 to-green-600 text-white border-2 border-green-600 hover:from-green-600 hover:to-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm hover:shadow-md"
               title="Approve borrow request"
             >
               <Check className="w-4 h-4" />
@@ -154,7 +154,7 @@ export default function BorrowsTable({
             <button
               onClick={() => onStatusChange(borrow.borrow_id, "rejected")}
               disabled={isUpdating}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold bg-gradient-to-r from-red-500 to-red-600 text-white border-2 border-red-600 hover:from-red-600 hover:to-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm hover:shadow-md"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold bg-linear-to-r from-red-500 to-red-600 text-white border-2 border-red-600 hover:from-red-600 hover:to-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm hover:shadow-md"
               title="Reject borrow request"
             >
               <X className="w-4 h-4" />
@@ -176,7 +176,7 @@ export default function BorrowsTable({
           <button
             onClick={() => onStatusChange(borrow.borrow_id, "closed")}
             disabled={isUpdating}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold bg-gradient-to-r from-indigo-500 to-indigo-600 text-white border-2 border-indigo-600 hover:from-indigo-600 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm hover:shadow-md"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold bg-linear-to-r from-indigo-500 to-indigo-600 text-white border-2 border-indigo-600 hover:from-indigo-600 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm hover:shadow-md"
             title="Mark as returned"
           >
             <CheckCircle className="w-4 h-4" />
@@ -196,7 +196,7 @@ export default function BorrowsTable({
     <div className="space-y-6">
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-7 gap-4">
-        <div className="bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl p-6 text-white shadow-lg">
+        <div className="bg-linear-to-br from-indigo-500 to-indigo-600 rounded-xl p-6 text-white shadow-lg">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-indigo-100 text-sm font-medium">Total</p>
@@ -208,7 +208,7 @@ export default function BorrowsTable({
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-xl p-6 text-white shadow-lg">
+        <div className="bg-linear-to-br from-yellow-500 to-yellow-600 rounded-xl p-6 text-white shadow-lg">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-yellow-100 text-sm font-medium">Pending</p>
@@ -220,7 +220,7 @@ export default function BorrowsTable({
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 text-white shadow-lg">
+        <div className="bg-linear-to-br from-blue-500 to-blue-600 rounded-xl p-6 text-white shadow-lg">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-blue-100 text-sm font-medium">Progress</p>
@@ -232,7 +232,7 @@ export default function BorrowsTable({
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-6 text-white shadow-lg">
+        <div className="bg-linear-to-br from-green-500 to-green-600 rounded-xl p-6 text-white shadow-lg">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-green-100 text-sm font-medium">Closed</p>
@@ -244,7 +244,7 @@ export default function BorrowsTable({
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-gray-500 to-gray-600 rounded-xl p-6 text-white shadow-lg">
+        <div className="bg-linear-to-br from-gray-500 to-gray-600 rounded-xl p-6 text-white shadow-lg">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-100 text-sm font-medium">Rejected</p>
@@ -256,7 +256,7 @@ export default function BorrowsTable({
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-red-500 to-red-600 rounded-xl p-6 text-white shadow-lg">
+        <div className="bg-linear-to-br from-red-500 to-red-600 rounded-xl p-6 text-white shadow-lg">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-red-100 text-sm font-medium">Overdue</p>
@@ -268,7 +268,7 @@ export default function BorrowsTable({
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-6 text-white shadow-lg">
+        <div className="bg-linear-to-br from-purple-500 to-purple-600 rounded-xl p-6 text-white shadow-lg">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-purple-100 text-sm font-medium">Total Fines</p>
@@ -362,7 +362,7 @@ export default function BorrowsTable({
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
+              <tr className="bg-linear-to-r from-gray-50 to-gray-100 border-b border-gray-200">
                 <th className="text-left p-4 font-semibold text-gray-700">
                   ID
                 </th>
@@ -413,7 +413,7 @@ export default function BorrowsTable({
                 sortedBorrows.map((br, index) => (
                   <tr
                     key={br.borrow_id}
-                    className={`border-b border-gray-100 hover:bg-gradient-to-r hover:from-indigo-50 hover:to-blue-50 transition-all duration-200 ${
+                    className={`border-b border-gray-100 hover:bg-linear-to-r hover:from-indigo-50 hover:to-blue-50 transition-all duration-200 ${
                       isOverdue(br.due_date, br.status)
                         ? "bg-red-50"
                         : index % 2 === 0
@@ -428,7 +428,7 @@ export default function BorrowsTable({
                     </td>
                     <td className="p-4">
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-100 to-blue-100 flex items-center justify-center text-indigo-600 font-semibold text-sm border-2 border-indigo-200">
+                        <div className="w-8 h-8 rounded-full bg-linear-to-br from-indigo-100 to-blue-100 flex items-center justify-center text-indigo-600 font-semibold text-sm border-2 border-indigo-200">
                           {br.username.charAt(0).toUpperCase()}
                         </div>
                         <span className="text-gray-900 font-medium">
