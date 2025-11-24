@@ -71,7 +71,7 @@ export function AppSidebar({ setActiveMenu, ...props }) {
       <SidebarContent className="bg-white">
         <NavMain items={data.navMain} setActiveMenu={setActiveMenu} />
       </SidebarContent>
-      <SidebarFooter className="border-t border-gray-200 bg-gradient-to-br from-gray-50 to-white">
+      <SidebarFooter className="border-t border-gray-200 bg-linear-to-br from-gray-50 to-white">
         <NavUser user={props.user} />
       </SidebarFooter>
       <SidebarRail />
