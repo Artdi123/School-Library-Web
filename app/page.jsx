@@ -175,7 +175,7 @@ export default function Landing() {
                     height={720}
                     src={book.image || "/api/placeholder/300/400"}
                     alt={book.name}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover max-h-[400px]"
                   />
                   <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                     <div className="absolute bottom-4 left-4 right-4">

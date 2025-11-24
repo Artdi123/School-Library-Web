@@ -19,6 +19,9 @@ import {
   Clock,
   Bookmark,
   Bell,
+  Filter,
+  ArrowUpDown,
+  Tag,
 } from "lucide-react";
 import {
   getBooks,
@@ -33,6 +36,8 @@ export default function UserDashboard() {
   const [borrows, setBorrows] = useState([]);
   const [isPending, startTransition] = useTransition();
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [sortBy, setSortBy] = useState("newest");
   const [unreadCount, setUnreadCount] = useState(0);
 
   const [showModal, setShowModal] = useState(false);
@@ -41,6 +46,53 @@ export default function UserDashboard() {
   const [borrowSuccess, setShowSuccess] = useState(false);
 
   const user = session?.user;
+
+  const categories = [
+    { value: "all", label: "All Categories" },
+    { value: "fiction", label: "Fiction" },
+    { value: "non-fiction", label: "Non-Fiction" },
+    { value: "science", label: "Science" },
+    { value: "technology", label: "Technology" },
+    { value: "history", label: "History" },
+    { value: "biography", label: "Biography" },
+    { value: "children", label: "Children" },
+    { value: "education", label: "Education" },
+    { value: "reference", label: "Reference" },
+    { value: "other", label: "Other" },
+  ];
+
+  const sortOptions = [
+    { value: "newest", label: "Newest First" },
+    { value: "oldest", label: "Oldest First" },
+    { value: "name-asc", label: "Name (A-Z)" },
+    { value: "name-desc", label: "Name (Z-A)" },
+    { value: "stock-high", label: "Stock (High to Low)" },
+    { value: "stock-low", label: "Stock (Low to High)" },
+  ];
+
+  const getCategoryColor = (category) => {
+    const colors = {
+      fiction: "bg-purple-100 text-purple-700 border-purple-200",
+      "non-fiction": "bg-blue-100 text-blue-700 border-blue-200",
+      science: "bg-cyan-100 text-cyan-700 border-cyan-200",
+      technology: "bg-indigo-100 text-indigo-700 border-indigo-200",
+      history: "bg-amber-100 text-amber-700 border-amber-200",
+      biography: "bg-pink-100 text-pink-700 border-pink-200",
+      children: "bg-yellow-100 text-yellow-700 border-yellow-200",
+      education: "bg-green-100 text-green-700 border-green-200",
+      reference: "bg-slate-100 text-slate-700 border-slate-200",
+      other: "bg-gray-100 text-gray-700 border-gray-200",
+    };
+    return colors[category] || colors.other;
+  };
+
+  const formatCategory = (category) => {
+    if (!category) return "Other";
+    return category
+      .split("-")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+  };
 
   const formatDate = (date) => {
     if (!date) return "-";
@@ -111,12 +163,36 @@ export default function UserDashboard() {
     setBorrowing(false);
   }
 
-  const filteredBooks = books.filter(
-    (book) =>
-      book.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (book.author &&
-        book.author.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  const filteredBooks = books
+    .filter((book) => {
+      const matchesSearch =
+        book.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (book.author &&
+          book.author.toLowerCase().includes(searchQuery.toLowerCase()));
+
+      const matchesCategory =
+        selectedCategory === "all" || book.category === selectedCategory;
+
+      return matchesSearch && matchesCategory;
+    })
+    .sort((a, b) => {
+      switch (sortBy) {
+        case "newest":
+          return b.book_id - a.book_id;
+        case "oldest":
+          return a.book_id - b.book_id;
+        case "name-asc":
+          return a.name.localeCompare(b.name);
+        case "name-desc":
+          return b.name.localeCompare(a.name);
+        case "stock-high":
+          return b.stock - a.stock;
+        case "stock-low":
+          return a.stock - b.stock;
+        default:
+          return 0;
+      }
+    });
 
   const activeBorrows = borrows.filter((b) => b.status !== "closed");
   const completedBorrows = borrows.filter((b) => b.status === "closed");
@@ -327,7 +403,9 @@ export default function UserDashboard() {
                   <Book className="w-6 h-6" />
                   Browse Available Books
                 </h3>
-                <div className="relative">
+
+                {/* Search Bar */}
+                <div className="relative mb-4">
                   <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-indigo-600 w-5 h-5" />
                   <input
                     type="text"
@@ -336,6 +414,44 @@ export default function UserDashboard() {
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full pl-12 pr-4 py-3 rounded-xl bg-white border border-white/30 text-indigo-600 placeholder-indigo-400 focus:outline-none focus:ring-2 focus:ring-white/50 transition-all"
                   />
+                </div>
+
+                {/* Filter and Sort */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="relative">
+                    <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-indigo-600 w-4 h-4" />
+                    <select
+                      value={selectedCategory}
+                      onChange={(e) => setSelectedCategory(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2.5 border border-white/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-white/50 appearance-none bg-white text-indigo-600 text-sm"
+                    >
+                      {categories.map((cat) => (
+                        <option key={cat.value} value={cat.value}>
+                          {cat.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="relative">
+                    <ArrowUpDown className="absolute left-3 top-1/2 transform -translate-y-1/2 text-indigo-600 w-4 h-4" />
+                    <select
+                      value={sortBy}
+                      onChange={(e) => setSortBy(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2.5 border border-white/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-white/50 appearance-none bg-white text-indigo-600 text-sm"
+                    >
+                      {sortOptions.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Results count */}
+                <div className="mt-3 text-sm text-indigo-100">
+                  Showing {filteredBooks.length} of {books.length} books
                 </div>
               </div>
 
@@ -349,7 +465,7 @@ export default function UserDashboard() {
                   <div className="text-center py-16">
                     <Book className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                     <p className="text-gray-500 text-lg">
-                      {searchQuery
+                      {searchQuery || selectedCategory !== "all"
                         ? "No books found matching your search."
                         : "No books available at the moment."}
                     </p>
@@ -395,10 +511,21 @@ export default function UserDashboard() {
                               <p className="text-sm text-gray-600 mb-1">
                                 {book.author || "Unknown Author"}
                               </p>
-                              <p className="text-xs text-gray-500 mb-3">
+                              <p className="text-xs text-gray-500 mb-2">
                                 {book.publisher || "Unknown Publisher"} •{" "}
                                 {book.year_published || "N/A"}
                               </p>
+
+                              {/* Category Badge */}
+                              <span
+                                className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold border w-fit mb-3 ${getCategoryColor(
+                                  book.category
+                                )}`}
+                              >
+                                <Tag className="w-3 h-3" />
+                                {formatCategory(book.category)}
+                              </span>
+
                               <div className="flex items-center justify-between mt-auto gap-2">
                                 <span
                                   className={`text-xs font-semibold px-3 py-1 rounded-full ${
@@ -577,10 +704,18 @@ export default function UserDashboard() {
                   <p className="text-sm text-gray-600 mb-1">
                     {selectedBook.author || "Unknown Author"}
                   </p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-gray-500 mb-2">
                     {selectedBook.publisher || "Unknown Publisher"} •{" "}
                     {selectedBook.year_published || "N/A"}
                   </p>
+                  <span
+                    className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold border ${getCategoryColor(
+                      selectedBook.category
+                    )}`}
+                  >
+                    <Tag className="w-3 h-3" />
+                    {formatCategory(selectedBook.category)}
+                  </span>
                 </div>
               </div>
 

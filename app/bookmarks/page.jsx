@@ -14,6 +14,9 @@ import {
   Calendar,
   Bell,
   CheckCircle,
+  X,
+  AlertCircle,
+  Tag,
 } from "lucide-react";
 import {
   getBookmarks,
@@ -29,12 +32,40 @@ export default function BookmarksPage() {
   const [bookmarks, setBookmarks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [removing, setRemoving] = useState(null);
-  const [borrowing, setBorrowing] = useState(null);
+  const [borrowing, setBorrowing] = useState(false);
   const [borrowSuccess, setBorrowSuccess] = useState(false);
   const [userBorrows, setUserBorrows] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
 
+  // Modal states
+  const [showModal, setShowModal] = useState(false);
+  const [selectedBook, setSelectedBook] = useState(null);
+
   const user = session?.user;
+
+  const getCategoryColor = (category) => {
+    const colors = {
+      fiction: "bg-purple-100 text-purple-700 border-purple-200",
+      "non-fiction": "bg-blue-100 text-blue-700 border-blue-200",
+      science: "bg-cyan-100 text-cyan-700 border-cyan-200",
+      technology: "bg-indigo-100 text-indigo-700 border-indigo-200",
+      history: "bg-amber-100 text-amber-700 border-amber-200",
+      biography: "bg-pink-100 text-pink-700 border-pink-200",
+      children: "bg-yellow-100 text-yellow-700 border-yellow-200",
+      education: "bg-green-100 text-green-700 border-green-200",
+      reference: "bg-slate-100 text-slate-700 border-slate-200",
+      other: "bg-gray-100 text-gray-700 border-gray-200",
+    };
+    return colors[category] || colors.other;
+  };
+
+  const formatCategory = (category) => {
+    if (!category) return "Other";
+    return category
+      .split("-")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+  };
 
   useEffect(() => {
     async function loadBookmarks() {
@@ -65,23 +96,36 @@ export default function BookmarksPage() {
     setRemoving(null);
   };
 
-  const handleBorrow = async (bookId) => {
-    const userId = user?.id || user?.user_id || user?.sub;
-    if (!userId) return;
+  const openBorrowModal = (book) => {
+    setSelectedBook(book);
+    setShowModal(true);
+  };
 
-    setBorrowing(bookId);
-    const result = await borrowBook(userId, bookId);
+  const closeBorrowModal = () => {
+    setShowModal(false);
+    setSelectedBook(null);
+  };
+
+  const confirmBorrow = async () => {
+    const userId = user?.id || user?.user_id || user?.sub;
+    if (!userId || !selectedBook) return;
+
+    setBorrowing(true);
+    const result = await borrowBook(userId, selectedBook.book_id);
 
     if (result.success) {
       const marks = await getBookmarks(userId);
       setBookmarks(marks);
       const borrows = await getUserBorrows(userId);
       setUserBorrows(borrows);
+
+      setShowModal(false);
+      setSelectedBook(null);
       setBorrowSuccess(true);
       setTimeout(() => setBorrowSuccess(false), 3000);
     }
 
-    setBorrowing(null);
+    setBorrowing(false);
   };
 
   const hasActiveBorrow = (bookId) => {
@@ -285,10 +329,20 @@ export default function BookmarksPage() {
                         <p className="text-sm text-gray-600 mb-1">
                           {book.author || "Unknown Author"}
                         </p>
-                        <p className="text-xs text-gray-500 mb-3">
+                        <p className="text-xs text-gray-500 mb-2">
                           {book.publisher || "Unknown Publisher"} •{" "}
                           {book.year_published || "N/A"}
                         </p>
+
+                        {/* Category Badge */}
+                        <span
+                          className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold border w-fit mb-3 ${getCategoryColor(
+                            book.category
+                          )}`}
+                        >
+                          <Tag className="w-3 h-3" />
+                          {formatCategory(book.category)}
+                        </span>
 
                         <div className="flex items-center gap-2 text-xs text-gray-500 mb-4">
                           <Calendar className="w-4 h-4" />
@@ -311,22 +365,11 @@ export default function BookmarksPage() {
                             </div>
                           ) : (
                             <button
-                              onClick={() => handleBorrow(book.book_id)}
-                              disabled={
-                                isOutOfStock || borrowing === book.book_id
-                              }
+                              onClick={() => openBorrowModal(book)}
+                              disabled={isOutOfStock}
                               className="flex-1 bg-linear-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white py-2.5 rounded-lg font-medium transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed text-sm flex items-center justify-center gap-1"
                             >
-                              {borrowing === book.book_id ? (
-                                <>
-                                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                  <span>...</span>
-                                </>
-                              ) : isOutOfStock ? (
-                                "No Stock"
-                              ) : (
-                                "Borrow"
-                              )}
+                              {isOutOfStock ? "No Stock" : "Borrow"}
                             </button>
                           )}
                         </div>
@@ -339,6 +382,108 @@ export default function BookmarksPage() {
           </div>
         </div>
       </div>
+
+      {/* Confirmation Modal */}
+      {showModal && selectedBook && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div className="bg-linear-to-r from-indigo-600 to-blue-600 p-6 relative">
+              <button
+                onClick={closeBorrowModal}
+                disabled={borrowing}
+                className="absolute top-4 right-4 text-white/80 hover:text-white transition-colors disabled:opacity-50"
+              >
+                <X className="w-6 h-6" />
+              </button>
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                  <AlertCircle className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white">
+                    Confirm Borrow
+                  </h3>
+                  <p className="text-indigo-100 text-sm">
+                    Please review your selection
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6">
+              <div className="flex gap-4 mb-6">
+                {selectedBook.image ? (
+                  <Image
+                    src={selectedBook.image}
+                    alt={selectedBook.name}
+                    width={80}
+                    height={110}
+                    className="rounded-lg shadow-md object-cover"
+                  />
+                ) : (
+                  <div className="w-20 h-28 bg-linear-to-br from-indigo-100 to-blue-100 rounded-lg flex items-center justify-center shadow-md shrink-0">
+                    <Book className="w-10 h-10 text-indigo-400" />
+                  </div>
+                )}
+                <div className="flex-1">
+                  <h4 className="font-bold text-gray-900 text-lg mb-2">
+                    {selectedBook.name}
+                  </h4>
+                  <p className="text-sm text-gray-600 mb-1">
+                    {selectedBook.author || "Unknown Author"}
+                  </p>
+                  <p className="text-xs text-gray-500 mb-2">
+                    {selectedBook.publisher || "Unknown Publisher"} •{" "}
+                    {selectedBook.year_published || "N/A"}
+                  </p>
+                  <span
+                    className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold border ${getCategoryColor(
+                      selectedBook.category
+                    )}`}
+                  >
+                    <Tag className="w-3 h-3" />
+                    {formatCategory(selectedBook.category)}
+                  </span>
+                </div>
+              </div>
+
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                <p className="text-sm text-gray-700">
+                  Are you sure you want to borrow{" "}
+                  <span className="font-semibold">{selectedBook.name}</span>?
+                  This book will be added to your active borrows with a{" "}
+                  <span className="font-semibold text-yellow-700">pending</span>{" "}
+                  status. Due date will be 14 days from approval.
+                </p>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={closeBorrowModal}
+                  disabled={borrowing}
+                  className="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmBorrow}
+                  disabled={borrowing}
+                  className="flex-1 px-4 py-3 bg-linear-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white font-medium rounded-xl transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {borrowing ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <span>Borrowing...</span>
+                    </>
+                  ) : (
+                    "Confirm Borrow"
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

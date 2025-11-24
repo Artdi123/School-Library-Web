@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useTransition } from "react";
-import Image from "next/image";
 import { AppSidebar } from "@/components/app-sidebar";
 import {
   SidebarProvider,
@@ -18,8 +17,12 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 
-import Modal from "../components/Modal";
-import Buttons from "../components/Buttons";
+import UsersTable from "../components/UsersTable";
+import BooksTable from "../components/BooksTable";
+import BorrowsTable from "../components/BorrowsTable";
+import UserModal from "../components/UserModal";
+import BookModal from "../components/BookModal";
+import NotificationDropdown from "../components/NotificationDropdown";
 
 import {
   getAllUsers,
@@ -35,14 +38,7 @@ import {
 } from "@/lib/action";
 import { useSession } from "next-auth/react";
 import { forbidden } from "next/navigation";
-import {
-  Book,
-  User,
-  CheckCircle,
-  AlertTriangle,
-  Calendar,
-  DollarSign,
-} from "lucide-react";
+import { CheckCircle, Plus } from "lucide-react";
 
 export default function DashboardContent() {
   const [activeMenu, setActiveMenu] = useState("users");
@@ -59,6 +55,9 @@ export default function DashboardContent() {
   const [updatingStatus, setUpdatingStatus] = useState(null);
   const [statusSuccess, setStatusSuccess] = useState(false);
 
+  const { data: session, status } = useSession();
+  const user = session?.user;
+
   useEffect(() => {
     startTransition(async () => {
       if (activeMenu === "users") setUsers(await getAllUsers());
@@ -68,11 +67,13 @@ export default function DashboardContent() {
   }, [activeMenu]);
 
   async function handleDeleteUser(id) {
+    if (!confirm("Are you sure you want to delete this user?")) return;
     await deleteUser(id);
     setUsers(await getAllUsers());
   }
 
   async function handleDeleteBook(id) {
+    if (!confirm("Are you sure you want to delete this book?")) return;
     await deleteBook(id);
     setBooks(await getBooks());
   }
@@ -89,76 +90,95 @@ export default function DashboardContent() {
     setUpdatingStatus(null);
   }
 
-  const formatDate = (date) => {
-    if (!date) return "-";
-    const d = new Date(date);
-    return d.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  };
+  async function handleCreateUser(formData) {
+    await createUser(formData);
+    setShowAddUserModal(false);
+    setUsers(await getAllUsers());
+  }
 
-  const isOverdue = (dueDate, status) => {
-    if (status === "closed" || !dueDate) return false;
-    return new Date() > new Date(dueDate);
-  };
+  async function handleUpdateUser(formData) {
+    await updateUser(editUser.user_id, formData);
+    setShowEditUserModal(false);
+    setEditUser(null);
+    setUsers(await getAllUsers());
+  }
 
-  const { data: session, status } = useSession();
-  const user = session?.user;
+  async function handleCreateBook(formData) {
+    await createBook(formData);
+    setShowAddBookModal(false);
+    setBooks(await getBooks());
+  }
+
+  async function handleUpdateBook(formData) {
+    await updateBook(editBook.book_id, formData);
+    setShowEditBookModal(false);
+    setEditBook(null);
+    setBooks(await getBooks());
+  }
 
   if (user?.role === "user") {
     forbidden();
   }
 
+  const userId = user?.id || user?.user_id || user?.sub;
+
   return (
     <SidebarProvider>
       <AppSidebar setActiveMenu={setActiveMenu} user={user} />
       <SidebarInset>
-        <header className="flex h-16 items-center gap-2 border-b bg-white">
-          <div className="flex items-center gap-2 px-6">
-            <SidebarTrigger className="-ml-1 text-gray-600 hover:text-indigo-600 transition-colors" />
-            <Separator orientation="vertical" className="mr-2 h-4" />
-            <Breadcrumb>
-              <BreadcrumbList>
-                <BreadcrumbItem className="hidden md:block">
-                  <BreadcrumbLink
-                    href="/dashboard"
-                    className="text-gray-600 hover:text-indigo-600 transition-colors"
-                  >
-                    Dashboard
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator className="hidden md:block" />
-                <BreadcrumbItem>
-                  <BreadcrumbPage className="bg-linear-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent font-medium capitalize">
-                    {activeMenu}
-                  </BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
+        <header className="flex h-16 items-center gap-2 border-b bg-white shadow-sm">
+          <div className="flex items-center justify-between w-full px-6">
+            <div className="flex items-center gap-2">
+              <SidebarTrigger className="-ml-1 text-gray-600 hover:text-indigo-600 transition-colors" />
+              <Separator orientation="vertical" className="mr-2 h-4" />
+              <Breadcrumb>
+                <BreadcrumbList>
+                  <BreadcrumbItem className="hidden md:block">
+                    <BreadcrumbLink
+                      href="/dashboard"
+                      className="text-gray-600 hover:text-indigo-600 transition-colors"
+                    >
+                      Dashboard
+                    </BreadcrumbLink>
+                  </BreadcrumbItem>
+                  <BreadcrumbSeparator className="hidden md:block" />
+                  <BreadcrumbItem>
+                    <BreadcrumbPage className="bg-linear-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent font-medium capitalize">
+                      {activeMenu}
+                    </BreadcrumbPage>
+                  </BreadcrumbItem>
+                </BreadcrumbList>
+              </Breadcrumb>
+            </div>
+
+            {/* Notification Dropdown */}
+            <NotificationDropdown userId={userId} />
           </div>
         </header>
 
         {statusSuccess && (
           <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-top-5">
-            <div className="bg-green-500 text-white px-6 py-4 rounded-xl shadow-lg flex items-center gap-3">
-              <CheckCircle className="w-6 h-6" />
+            <div className="bg-linear-to-r from-green-500 to-green-600 text-white px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3">
+              <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                <CheckCircle className="w-6 h-6" />
+              </div>
               <div>
                 <p className="font-semibold">Status updated successfully!</p>
-                <p className="text-sm text-green-100">Borrow record updated</p>
+                <p className="text-sm text-green-100">
+                  Borrow record has been updated
+                </p>
               </div>
             </div>
           </div>
         )}
 
-        <div className="flex flex-1 flex-col gap-6 p-6 bg-gray-50 min-h-screen">
-          {/* USERS */}
+        <div className="flex flex-1 flex-col gap-6 p-6 bg-linear-to-br from-gray-50 via-blue-50/30 to-indigo-50/30 min-h-screen">
+          {/* USERS SECTION */}
           {activeMenu === "users" && (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-6 border-b border-gray-100">
+            <div>
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900">
+                  <h2 className="text-3xl font-bold bg-linear-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">
                     Users Management
                   </h2>
                   <p className="text-gray-600 mt-1">
@@ -167,114 +187,29 @@ export default function DashboardContent() {
                 </div>
                 <button
                   onClick={() => setShowAddUserModal(true)}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-lg font-medium transition-colors flex items-center gap-2 shadow-sm hover:shadow-md"
+                  className="bg-linear-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white px-6 py-3 rounded-xl font-semibold transition-all flex items-center gap-2 shadow-lg hover:shadow-xl transform hover:scale-105"
                 >
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 4v16m8-8H4"
-                    />
-                  </svg>
+                  <Plus className="w-5 h-5" />
                   Add User
                 </button>
               </div>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="bg-gray-50 border-b border-gray-200">
-                      <th className="text-left p-4 font-semibold text-gray-700">
-                        Username
-                      </th>
-                      <th className="text-left p-4 font-semibold text-gray-700">
-                        Email
-                      </th>
-                      <th className="text-left p-4 font-semibold text-gray-700">
-                        Role
-                      </th>
-                      <th className="text-left p-4 font-semibold text-gray-700">
-                        Image
-                      </th>
-                      <th className="text-left p-4 font-semibold text-gray-700">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {users.map((u) => (
-                      <tr
-                        key={u.user_id}
-                        className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
-                      >
-                        <td className="p-4 text-gray-900 font-medium">
-                          {u.username}
-                        </td>
-                        <td className="p-4 text-gray-700">{u.email}</td>
-                        <td className="p-4">
-                          <span
-                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                              u.role === "admin"
-                                ? "bg-indigo-100 text-indigo-800"
-                                : "bg-gray-100 text-gray-800"
-                            }`}
-                          >
-                            {u.role}
-                          </span>
-                        </td>
-                        <td className="p-4">
-                          {u.image ? (
-                            <Image
-                              src={u.image}
-                              alt={u.username}
-                              width={40}
-                              height={40}
-                              className="rounded-full border border-gray-200"
-                            />
-                          ) : (
-                            <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
-                              <User className="w-5 h-5 text-gray-400" />
-                            </div>
-                          )}
-                        </td>
-                        <td className="p-4">
-                          <div className="flex items-center gap-3">
-                            <button
-                              onClick={() => {
-                                setEditUser(u);
-                                setShowEditUserModal(true);
-                              }}
-                              className="text-indigo-600 hover:text-indigo-800 font-medium transition-colors"
-                            >
-                              Edit
-                            </button>
-                            <button
-                              onClick={() => handleDeleteUser(u.user_id)}
-                              className="text-red-600 hover:text-red-800 font-medium transition-colors"
-                            >
-                              Delete
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <UsersTable
+                users={users}
+                onEdit={(u) => {
+                  setEditUser(u);
+                  setShowEditUserModal(true);
+                }}
+                onDelete={handleDeleteUser}
+              />
             </div>
           )}
 
-          {/* BOOKS */}
+          {/* BOOKS SECTION */}
           {activeMenu === "books" && (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-6 border-b border-gray-100">
+            <div>
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900">
+                  <h2 className="text-3xl font-bold bg-linear-to-r from-emerald-600 to-blue-600 bg-clip-text text-transparent">
                     Books Management
                   </h2>
                   <p className="text-gray-600 mt-1">
@@ -283,509 +218,82 @@ export default function DashboardContent() {
                 </div>
                 <button
                   onClick={() => setShowAddBookModal(true)}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-lg font-medium transition-colors flex items-center gap-2 shadow-sm hover:shadow-md"
+                  className="bg-linear-to-r from-emerald-600 to-blue-600 hover:from-emerald-700 hover:to-blue-700 text-white px-6 py-3 rounded-xl font-semibold transition-all flex items-center gap-2 shadow-lg hover:shadow-xl transform hover:scale-105"
                 >
+                  <Plus className="w-5 h-5" />
                   Add Book
                 </button>
               </div>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="bg-gray-50 border-b border-gray-200">
-                      <th className="text-left p-4 font-semibold text-gray-700">
-                        Name
-                      </th>
-                      <th className="text-left p-4 font-semibold text-gray-700">
-                        Author
-                      </th>
-                      <th className="text-left p-4 font-semibold text-gray-700">
-                        Publisher
-                      </th>
-                      <th className="text-left p-4 font-semibold text-gray-700">
-                        Year
-                      </th>
-                      <th className="text-left p-4 font-semibold text-gray-700">
-                        Stock
-                      </th>
-                      <th className="text-left p-4 font-semibold text-gray-700">
-                        Image
-                      </th>
-                      <th className="text-left p-4 font-semibold text-gray-700">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {books.map((b) => (
-                      <tr
-                        key={b.book_id}
-                        className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
-                      >
-                        <td className="p-4 text-gray-900 font-medium">
-                          {b.name}
-                        </td>
-                        <td className="p-4 text-gray-700">{b.author}</td>
-                        <td className="p-4 text-gray-700">{b.publisher}</td>
-                        <td className="p-4 text-gray-700">
-                          {b.year_published}
-                        </td>
-                        <td className="p-4">
-                          <span
-                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                              b.stock > 5
-                                ? "bg-green-100 text-green-800"
-                                : b.stock > 0
-                                ? "bg-yellow-100 text-yellow-800"
-                                : "bg-red-100 text-red-800"
-                            }`}
-                          >
-                            {b.stock} in stock
-                          </span>
-                        </td>
-                        <td className="p-4">
-                          {b.image ? (
-                            <Image
-                              src={b.image}
-                              alt={b.name}
-                              width={40}
-                              height={40}
-                              className="rounded border border-gray-200"
-                            />
-                          ) : (
-                            <div className="w-10 h-10 rounded bg-gray-200 flex items-center justify-center">
-                              <Book className="w-5 h-5 text-gray-400" />
-                            </div>
-                          )}
-                        </td>
-                        <td className="p-4">
-                          <div className="flex items-center gap-3">
-                            <button
-                              onClick={() => {
-                                setEditBook(b);
-                                setShowEditBookModal(true);
-                              }}
-                              className="text-indigo-600 hover:text-indigo-800 font-medium transition-colors"
-                            >
-                              Edit
-                            </button>
-                            <button
-                              onClick={() => handleDeleteBook(b.book_id)}
-                              className="text-red-600 hover:text-red-800 font-medium transition-colors"
-                            >
-                              Delete
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <BooksTable
+                books={books}
+                onEdit={(b) => {
+                  setEditBook(b);
+                  setShowEditBookModal(true);
+                }}
+                onDelete={handleDeleteBook}
+              />
             </div>
           )}
 
-          {/* BORROWS */}
+          {/* BORROWS SECTION */}
           {activeMenu === "borrows" && (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-6 border-b border-gray-100">
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900">
-                    Borrow Management
-                  </h2>
-                  <p className="text-gray-600 mt-1">
-                    Track and manage book borrowing activities
-                  </p>
-                </div>
+            <div>
+              <div className="mb-6">
+                <h2 className="text-3xl font-bold bg-linear-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                  Borrow Management
+                </h2>
+                <p className="text-gray-600 mt-1">
+                  Track and manage book borrowing activities
+                </p>
               </div>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="bg-gray-50 border-b border-gray-200">
-                      <th className="text-left p-4 font-semibold text-gray-700">
-                        ID
-                      </th>
-                      <th className="text-left p-4 font-semibold text-gray-700">
-                        Username
-                      </th>
-                      <th className="text-left p-4 font-semibold text-gray-700">
-                        Book
-                      </th>
-                      <th className="text-left p-4 font-semibold text-gray-700">
-                        Borrow Date
-                      </th>
-                      <th className="text-left p-4 font-semibold text-gray-700">
-                        Due Date
-                      </th>
-                      <th className="text-left p-4 font-semibold text-gray-700">
-                        Return Date
-                      </th>
-                      <th className="text-left p-4 font-semibold text-gray-700">
-                        Fine
-                      </th>
-                      <th className="text-left p-4 font-semibold text-gray-700">
-                        Status
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {borrows.map((br) => (
-                      <tr
-                        key={br.borrow_id}
-                        className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${
-                          isOverdue(br.due_date, br.status) ? "bg-red-50" : ""
-                        }`}
-                      >
-                        <td className="p-4 text-gray-700 font-mono">
-                          #{br.borrow_id}
-                        </td>
-                        <td className="p-4 text-gray-900 font-medium">
-                          {br.username}
-                        </td>
-                        <td className="p-4 text-gray-700">{br.book_name}</td>
-                        <td className="p-4 text-gray-700">
-                          {formatDate(br.borrow_date)}
-                        </td>
-                        <td className="p-4">
-                          <div className="flex items-center gap-2">
-                            <Calendar className="w-4 h-4 text-gray-400" />
-                            <span
-                              className={
-                                isOverdue(br.due_date, br.status)
-                                  ? "text-red-600 font-medium"
-                                  : "text-gray-700"
-                              }
-                            >
-                              {formatDate(br.due_date)}
-                            </span>
-                            {isOverdue(br.due_date, br.status) && (
-                              <AlertTriangle className="w-4 h-4 text-red-500" />
-                            )}
-                          </div>
-                        </td>
-                        <td className="p-4 text-gray-700">
-                          {formatDate(br.return_date)}
-                        </td>
-                        <td className="p-4">
-                          {br.fine > 0 ? (
-                            <div className="flex items-center gap-1 text-red-600 font-medium">
-                              <DollarSign className="w-4 h-4" />
-                              Rp {br.fine.toLocaleString()}
-                            </div>
-                          ) : (
-                            <span className="text-gray-400">-</span>
-                          )}
-                        </td>
-                        <td className="p-4">
-                          <div className="flex items-center gap-2">
-                            <select
-                              value={br.status}
-                              onChange={(e) =>
-                                handleStatusChange(br.borrow_id, e.target.value)
-                              }
-                              disabled={updatingStatus === br.borrow_id}
-                              className={`border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors ${
-                                updatingStatus === br.borrow_id
-                                  ? "opacity-50 cursor-not-allowed"
-                                  : ""
-                              }`}
-                            >
-                              <option value="pending">Pending</option>
-                              <option value="progress">Progress</option>
-                              <option value="closed">Closed</option>
-                            </select>
-                            {updatingStatus === br.borrow_id && (
-                              <div className="w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <BorrowsTable
+                borrows={borrows}
+                onStatusChange={handleStatusChange}
+                updatingStatus={updatingStatus}
+              />
             </div>
           )}
         </div>
 
-        {/* ADD USER MODAL */}
+        {/* MODALS */}
         {showAddUserModal && (
-          <Modal
-            title="Add New User"
+          <UserModal
+            mode="add"
             onClose={() => setShowAddUserModal(false)}
-          >
-            <form action={createUser} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Username
-                </label>
-                <input
-                  name="username"
-                  required
-                  placeholder="Enter username"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Email
-                </label>
-                <input
-                  name="email"
-                  required
-                  type="email"
-                  placeholder="Enter email address"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Password
-                </label>
-                <input
-                  name="password"
-                  type="password"
-                  placeholder="Enter password"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Role
-                </label>
-                <select
-                  name="role"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                >
-                  <option value="user">User</option>
-                  <option value="admin">Admin</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Profile Image
-                </label>
-                <input
-                  name="image"
-                  type="file"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                />
-              </div>
-              <Buttons onCancel={() => setShowAddUserModal(false)} />
-            </form>
-          </Modal>
+            onSubmit={handleCreateUser}
+          />
         )}
 
-        {/* EDIT USER MODAL */}
         {showEditUserModal && editUser && (
-          <Modal title="Edit User" onClose={() => setShowEditUserModal(false)}>
-            <form
-              action={(formData) => updateUser(editUser.user_id, formData)}
-              className="space-y-4"
-            >
-              <input
-                type="hidden"
-                name="currentImage"
-                value={editUser.image || ""}
-              />
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Username
-                </label>
-                <input
-                  name="username"
-                  defaultValue={editUser.username}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Email
-                </label>
-                <input
-                  name="email"
-                  defaultValue={editUser.email}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Role
-                </label>
-                <select
-                  name="role"
-                  defaultValue={editUser.role}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                >
-                  <option value="user">User</option>
-                  <option value="admin">Admin</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Profile Image
-                </label>
-                <input
-                  name="image"
-                  type="file"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                />
-              </div>
-              <Buttons onCancel={() => setShowEditUserModal(false)} />
-            </form>
-          </Modal>
+          <UserModal
+            mode="edit"
+            user={editUser}
+            onClose={() => {
+              setShowEditUserModal(false);
+              setEditUser(null);
+            }}
+            onSubmit={handleUpdateUser}
+          />
         )}
 
-        {/* ADD BOOK MODAL */}
         {showAddBookModal && (
-          <Modal
-            title="Add New Book"
+          <BookModal
+            mode="add"
             onClose={() => setShowAddBookModal(false)}
-          >
-            <form action={createBook} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Book Name
-                </label>
-                <input
-                  name="name"
-                  required
-                  placeholder="Enter book name"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Author
-                </label>
-                <input
-                  name="author"
-                  placeholder="Enter author name"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Publisher
-                </label>
-                <input
-                  name="publisher"
-                  placeholder="Enter publisher"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Year Published
-                </label>
-                <input
-                  name="year_published"
-                  type="number"
-                  placeholder="Enter publication year"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Stock
-                </label>
-                <input
-                  name="stock"
-                  type="number"
-                  placeholder="Enter stock quantity"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Book Cover
-                </label>
-                <input
-                  name="image"
-                  type="file"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                />
-              </div>
-              <Buttons onCancel={() => setShowAddBookModal(false)} />
-            </form>
-          </Modal>
+            onSubmit={handleCreateBook}
+          />
         )}
 
-        {/* EDIT BOOK MODAL */}
         {showEditBookModal && editBook && (
-          <Modal title="Edit Book" onClose={() => setShowEditBookModal(false)}>
-            <form
-              action={(formData) => updateBook(editBook.book_id, formData)}
-              className="space-y-4"
-            >
-              <input
-                type="hidden"
-                name="currentImage"
-                value={editBook.image || ""}
-              />
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Book Name
-                </label>
-                <input
-                  name="name"
-                  defaultValue={editBook.name}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Author
-                </label>
-                <input
-                  name="author"
-                  defaultValue={editBook.author}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Publisher
-                </label>
-                <input
-                  name="publisher"
-                  defaultValue={editBook.publisher}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Year Published
-                </label>
-                <input
-                  name="year_published"
-                  defaultValue={editBook.year_published}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Stock
-                </label>
-                <input
-                  name="stock"
-                  type="number"
-                  defaultValue={editBook.stock}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Book Cover
-                </label>
-                <input
-                  name="image"
-                  type="file"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                />
-              </div>
-              <Buttons onCancel={() => setShowEditBookModal(false)} />
-            </form>
-          </Modal>
+          <BookModal
+            mode="edit"
+            book={editBook}
+            onClose={() => {
+              setShowEditBookModal(false);
+              setEditBook(null);
+            }}
+            onSubmit={handleUpdateBook}
+          />
         )}
       </SidebarInset>
     </SidebarProvider>

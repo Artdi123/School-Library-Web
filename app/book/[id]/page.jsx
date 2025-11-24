@@ -21,6 +21,7 @@ import {
   Bookmark,
   BookmarkCheck,
   Bell,
+  Tag,
 } from "lucide-react";
 import {
   getBookById,
@@ -60,11 +61,9 @@ export default function BookDetail({ params }) {
           const borrows = await getUserBorrows(userId);
           setUserBorrows(borrows);
 
-          // Check if book is bookmarked
           const isBookmarkedStatus = await isBookmarked(userId, bookId);
           setBookmarked(isBookmarkedStatus);
 
-          // Get unread notification count
           const count = await getUnreadNotificationCount(userId);
           setUnreadCount(count);
         }
@@ -94,11 +93,9 @@ export default function BookDetail({ params }) {
       const result = await borrowBook(userId, book.book_id);
 
       if (result.success) {
-        // Refresh book data
         const updatedBook = await getBookById(bookId);
         setBook(updatedBook);
 
-        // Refresh user borrows
         const borrows = await getUserBorrows(userId);
         setUserBorrows(borrows);
 
@@ -143,6 +140,30 @@ export default function BookDetail({ params }) {
       borrow.book_id === book?.book_id &&
       (borrow.status === "pending" || borrow.status === "progress")
   );
+
+  const getCategoryColor = (category) => {
+    const colors = {
+      fiction: "bg-purple-100 text-purple-700 border-purple-200",
+      "non-fiction": "bg-blue-100 text-blue-700 border-blue-200",
+      science: "bg-cyan-100 text-cyan-700 border-cyan-200",
+      technology: "bg-indigo-100 text-indigo-700 border-indigo-200",
+      history: "bg-amber-100 text-amber-700 border-amber-200",
+      biography: "bg-pink-100 text-pink-700 border-pink-200",
+      children: "bg-yellow-100 text-yellow-700 border-yellow-200",
+      education: "bg-green-100 text-green-700 border-green-200",
+      reference: "bg-slate-100 text-slate-700 border-slate-200",
+      other: "bg-gray-100 text-gray-700 border-gray-200",
+    };
+    return colors[category] || colors.other;
+  };
+
+  const formatCategory = (category) => {
+    if (!category) return "Other";
+    return category
+      .split("-")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+  };
 
   if (loading || status === "loading") {
     return (
@@ -315,8 +336,22 @@ export default function BookDetail({ params }) {
                   </button>
                 </div>
 
+                {/* Category Badge */}
+                {book.category && (
+                  <div className="mt-6">
+                    <div
+                      className={`flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-semibold border ${getCategoryColor(
+                        book.category
+                      )}`}
+                    >
+                      <Tag className="w-5 h-5" />
+                      <span>{formatCategory(book.category)}</span>
+                    </div>
+                  </div>
+                )}
+
                 {/* Stock Badge */}
-                <div className="mt-6">
+                <div className="mt-4">
                   <div
                     className={`flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-semibold ${
                       isOutOfStock
@@ -424,7 +459,7 @@ export default function BookDetail({ params }) {
                   <h3 className="text-xl font-bold text-gray-900 mb-3">
                     About This Book
                   </h3>
-                  <p className="text-gray-600 leading-relaxed">
+                  <p className="text-gray-600 leading-relaxed whitespace-pre-line">
                     {book.description ||
                       "This book is a valuable addition to our library collection. It covers important topics and provides insightful perspectives that will enhance your knowledge and understanding."}
                   </p>
@@ -548,6 +583,16 @@ export default function BookDetail({ params }) {
                     {book.publisher || "Unknown Publisher"} •{" "}
                     {book.year_published || "N/A"}
                   </p>
+                  {book.category && (
+                    <span
+                      className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold mt-2 border ${getCategoryColor(
+                        book.category
+                      )}`}
+                    >
+                      <Tag className="w-3 h-3" />
+                      {formatCategory(book.category)}
+                    </span>
+                  )}
                 </div>
               </div>
 
