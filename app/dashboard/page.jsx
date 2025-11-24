@@ -28,6 +28,7 @@ import {
   getAllUsers,
   getBooks,
   getAllBorrows,
+  getBorrowsForExport,
   createUser,
   updateUser,
   deleteUser,
@@ -38,7 +39,8 @@ import {
 } from "@/lib/action";
 import { useSession } from "next-auth/react";
 import { forbidden } from "next/navigation";
-import { CheckCircle, Plus } from "lucide-react";
+import { CheckCircle, Plus, FileDown } from "lucide-react";
+import { exportBorrowsToExcel } from "@/lib/ExportToExcel";
 
 export default function DashboardContent() {
   const [activeMenu, setActiveMenu] = useState("users");
@@ -54,6 +56,7 @@ export default function DashboardContent() {
   const [editBook, setEditBook] = useState(null);
   const [updatingStatus, setUpdatingStatus] = useState(null);
   const [statusSuccess, setStatusSuccess] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   const { data: session, status } = useSession();
   const user = session?.user;
@@ -114,6 +117,19 @@ export default function DashboardContent() {
     setShowEditBookModal(false);
     setEditBook(null);
     setBooks(await getBooks());
+  }
+
+  async function handleExportBorrows() {
+    try {
+      setIsExporting(true);
+      const data = await getBorrowsForExport();
+      exportBorrowsToExcel(data);
+      setIsExporting(false);
+    } catch (error) {
+      console.error("Export failed:", error);
+      alert("Failed to export data. Please try again.");
+      setIsExporting(false);
+    }
   }
 
   if (user?.role === "user") {
@@ -238,13 +254,23 @@ export default function DashboardContent() {
           {/* BORROWS SECTION */}
           {activeMenu === "borrows" && (
             <div>
-              <div className="mb-6">
-                <h2 className="text-3xl font-bold bg-linear-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                  Borrow Management
-                </h2>
-                <p className="text-gray-600 mt-1">
-                  Track and manage book borrowing activities
-                </p>
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                <div>
+                  <h2 className="text-3xl font-bold bg-linear-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                    Borrow Management
+                  </h2>
+                  <p className="text-gray-600 mt-1">
+                    Track and manage book borrowing activities
+                  </p>
+                </div>
+                <button
+                  onClick={handleExportBorrows}
+                  disabled={isExporting || borrows.length === 0}
+                  className="bg-linear-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-6 py-3 rounded-xl font-semibold transition-all flex items-center gap-2 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                >
+                  <FileDown className="w-5 h-5" />
+                  {isExporting ? "Exporting..." : "Export to Excel"}
+                </button>
               </div>
               <BorrowsTable
                 borrows={borrows}
