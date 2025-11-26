@@ -1,4 +1,6 @@
+// @/app/components/dashboard/BorrowsTable.jsx
 import { useState } from "react";
+import Image from "next/image";
 import {
   Calendar,
   DollarSign,
@@ -11,6 +13,7 @@ import {
   Filter,
   Check,
   X,
+  User,
 } from "lucide-react";
 
 export default function BorrowsTable({
@@ -428,9 +431,19 @@ export default function BorrowsTable({
                     </td>
                     <td className="p-4">
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-linear-to-br from-indigo-100 to-blue-100 flex items-center justify-center text-indigo-600 font-semibold text-sm border-2 border-indigo-200">
-                          {br.username.charAt(0).toUpperCase()}
-                        </div>
+                        {br.user_image ? (
+                          <Image
+                            src={br.user_image}
+                            alt={br.username}
+                            width={32}
+                            height={32}
+                            className="w-8 h-8 rounded-full object-cover border-2 border-indigo-200"
+                          />
+                        ) : (
+                          <div className="w-8 h-8 rounded-full bg-linear-to-br from-indigo-100 to-blue-100 flex items-center justify-center text-indigo-600 font-semibold text-sm border-2 border-indigo-200">
+                            {br.username.charAt(0).toUpperCase()}
+                          </div>
+                        )}
                         <span className="text-gray-900 font-medium">
                           {br.username}
                         </span>

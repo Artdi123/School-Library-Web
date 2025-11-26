@@ -32,6 +32,9 @@ import {
   isBookmarked,
   getUnreadNotificationCount,
 } from "@/lib/action";
+import Navbar from "@/app/components/dashboard/Navbar";
+import BorrowModal from "@/app/components/dashboard/BorrowModal";
+import SuccessToast from "@/app/components/dashboard/SuccessToast";
 
 export default function BookDetail({ params }) {
   const { data: session, status } = useSession();
@@ -203,20 +206,11 @@ export default function BookDetail({ params }) {
 
   return (
     <div className="min-h-screen bg-linear-to-br from-indigo-50 via-blue-50 to-white">
-      {/* Success Notification */}
-      {borrowSuccess && (
-        <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-top-5">
-          <div className="bg-green-500 text-white px-6 py-4 rounded-xl shadow-lg flex items-center gap-3">
-            <CheckCircle className="w-6 h-6" />
-            <div>
-              <p className="font-semibold">Book borrowed successfully!</p>
-              <p className="text-sm text-green-100">
-                Check your borrows section
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
+      <SuccessToast
+        show={borrowSuccess}
+        message="Book borrowed successfully!"
+        submessage="Check your borrow history"
+      />
 
       {/* Bookmark Success Notification */}
       {bookmarkSuccess && (
@@ -233,57 +227,8 @@ export default function BookDetail({ params }) {
         </div>
       )}
 
-      {/* Header */}
-      <header className="bg-linear-to-r from-indigo-600 to-blue-600 shadow-xl">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center shadow-lg">
-                <Library className="w-7 h-7 text-white" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-white">
-                  Taruna Library
-                </h1>
-                <p className="text-indigo-100 text-sm">
-                  Your gateway to knowledge
-                </p>
-              </div>
-            </div>
-            <nav className="flex items-center gap-6">
-              <Link
-                href="/home"
-                className="text-white font-medium hover:text-indigo-100 transition-colors"
-              >
-                Home
-              </Link>
-              <Link
-                href="/bookmarks"
-                className="text-white font-medium hover:text-indigo-100 transition-colors"
-              >
-                Bookmarks
-              </Link>
-              <Link
-                href="/notifications"
-                className="text-white font-medium hover:text-indigo-100 transition-colors relative"
-              >
-                Notifications
-                {unreadCount > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
-                    {unreadCount}
-                  </span>
-                )}
-              </Link>
-              <Link
-                href="/profile"
-                className="text-white font-medium hover:text-indigo-100 transition-colors"
-              >
-                Profile
-              </Link>
-            </nav>
-          </div>
-        </div>
-      </header>
+      {/* Navbar */}
+      <Navbar user={user} unreadCount={unreadCount} />
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Back Button */}
@@ -537,101 +482,14 @@ export default function BookDetail({ params }) {
         </div>
       </div>
 
-      {/* Confirmation Modal */}
+      {/* Borrow Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden animate-in fade-in zoom-in duration-200">
-            <div className="bg-linear-to-r from-indigo-600 to-blue-600 p-6">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
-                  <AlertCircle className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-white">
-                    Confirm Borrow
-                  </h3>
-                  <p className="text-indigo-100 text-sm">
-                    Review your selection
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="p-6">
-              <div className="flex gap-4 mb-6">
-                {book.image ? (
-                  <Image
-                    src={book.image}
-                    alt={book.name}
-                    width={80}
-                    height={110}
-                    className="rounded-lg shadow-md object-cover"
-                  />
-                ) : (
-                  <div className="w-20 h-28 bg-linear-to-br from-indigo-100 to-blue-100 rounded-lg flex items-center justify-center shadow-md shrink-0">
-                    <Book className="w-10 h-10 text-indigo-400" />
-                  </div>
-                )}
-                <div className="flex-1">
-                  <h4 className="font-bold text-gray-900 text-lg mb-2">
-                    {book.name}
-                  </h4>
-                  <p className="text-sm text-gray-600 mb-1">
-                    {book.author || "Unknown Author"}
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    {book.publisher || "Unknown Publisher"} •{" "}
-                    {book.year_published || "N/A"}
-                  </p>
-                  {book.category && (
-                    <span
-                      className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold mt-2 border ${getCategoryColor(
-                        book.category
-                      )}`}
-                    >
-                      <Tag className="w-3 h-3" />
-                      {formatCategory(book.category)}
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                <p className="text-sm text-gray-700">
-                  Are you sure you want to borrow{" "}
-                  <span className="font-semibold">{book.name}</span>? This book
-                  will be added to your active borrows with a{" "}
-                  <span className="font-semibold text-yellow-700">pending</span>{" "}
-                  status.
-                </p>
-              </div>
-
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setShowModal(false)}
-                  disabled={borrowing}
-                  className="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl transition-colors disabled:opacity-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={confirmBorrow}
-                  disabled={borrowing}
-                  className="flex-1 px-4 py-3 bg-linear-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white font-medium rounded-xl transition-all shadow-md hover:shadow-lg disabled:opacity-50 flex items-center justify-center gap-2"
-                >
-                  {borrowing ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      <span>Borrowing...</span>
-                    </>
-                  ) : (
-                    "Confirm Borrow"
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <BorrowModal
+          book={selectedBook}
+          onClose={closeBorrowModal}
+          onConfirm={confirmBorrow}
+          borrowing={borrowing}
+        />
       )}
     </div>
   );

@@ -21,6 +21,7 @@ import {
   Bell,
 } from "lucide-react";
 import { updateUserProfile, getUnreadNotificationCount } from "@/lib/action";
+import Navbar from "../components/dashboard/Navbar";
 
 export default function UserProfile() {
   const { data: session, update } = useSession();
@@ -153,57 +154,8 @@ export default function UserProfile() {
         </div>
       )}
 
-      {/* Header */}
-      <header className="bg-linear-to-r from-indigo-600 to-blue-600 shadow-xl">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center shadow-lg">
-                <Library className="w-7 h-7 text-white" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-white">
-                  Taruna Library
-                </h1>
-                <p className="text-indigo-100 text-sm">
-                  Your gateway to knowledge
-                </p>
-              </div>
-            </div>
-            <nav className="flex items-center gap-6">
-              <Link
-                href="/home"
-                className="text-white font-medium hover:text-indigo-100 transition-colors"
-              >
-                Home
-              </Link>
-              <Link
-                href="/bookmarks"
-                className="text-white font-medium hover:text-indigo-100 transition-colors"
-              >
-                Bookmarks
-              </Link>
-              <Link
-                href="/notifications"
-                className="text-white font-medium hover:text-indigo-100 transition-colors relative"
-              >
-                Notifications
-                {unreadCount > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
-                    {unreadCount}
-                  </span>
-                )}
-              </Link>
-              <Link
-                href="/profile"
-                className="text-white font-medium hover:text-indigo-100 transition-colors"
-              >
-                Profile
-              </Link>
-            </nav>
-          </div>
-        </div>
-      </header>
+      {/* Navbar */}
+      <Navbar user={user} unreadCount={unreadCount} />
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Back Button */}

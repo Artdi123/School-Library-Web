@@ -38,17 +38,17 @@ export function NavUser({ user }) {
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
               size="lg"
-              className="data-[state=open]:bg-gradient-to-r data-[state=open]:from-indigo-50 data-[state=open]:to-blue-50 hover:bg-gradient-to-r hover:from-indigo-50 hover:to-blue-50 transition-all duration-200 rounded-xl py-6 group"
+              className="data-[state=open]:bg-linear-to-r data-[state=open]:from-indigo-50 data-[state=open]:to-blue-50 hover:bg-linear-to-r hover:from-indigo-50 hover:to-blue-50 transition-all duration-200 rounded-xl py-6 group"
             >
               <div className="relative">
                 <Avatar className="h-10 w-10 rounded-xl border-2 border-indigo-200 shadow-sm">
                   <AvatarImage src={user?.image} alt={user?.name} />
-                  <AvatarFallback className="rounded-xl bg-gradient-to-br from-indigo-600 to-blue-600 text-white font-semibold">
+                  <AvatarFallback className="rounded-xl bg-linear-to-br from-indigo-600 to-blue-600 text-white font-semibold">
                     {user?.name?.charAt(0)?.toUpperCase() || "A"}
                   </AvatarFallback>
                 </Avatar>
                 {user?.role === "admin" && (
-                  <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-gradient-to-br from-indigo-600 to-blue-600 rounded-full flex items-center justify-center border-2 border-white shadow-sm">
+                  <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-linear-to-br from-indigo-600 to-blue-600 rounded-full flex items-center justify-center border-2 border-white shadow-sm">
                     <Shield className="w-3 h-3 text-white" />
                   </div>
                 )}
@@ -73,16 +73,16 @@ export function NavUser({ user }) {
             sideOffset={4}
           >
             <DropdownMenuLabel className="p-0 font-normal">
-              <div className="flex items-center gap-3 px-3 py-3 bg-gradient-to-r from-indigo-50 to-blue-50 rounded-t-xl">
+              <div className="flex items-center gap-3 px-3 py-3 bg-linear-to-r from-indigo-50 to-blue-50 rounded-t-xl">
                 <div className="relative">
                   <Avatar className="h-12 w-12 rounded-xl border-2 border-indigo-200 shadow-sm">
                     <AvatarImage src={user?.image} alt={user?.name} />
-                    <AvatarFallback className="rounded-xl bg-gradient-to-br from-indigo-600 to-blue-600 text-white font-semibold text-lg">
+                    <AvatarFallback className="rounded-xl bg-linear-to-br from-indigo-600 to-blue-600 text-white font-semibold text-lg">
                       {user?.name?.charAt(0)?.toUpperCase() || "A"}
                     </AvatarFallback>
                   </Avatar>
                   {user?.role === "admin" && (
-                    <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-gradient-to-br from-indigo-600 to-blue-600 rounded-full flex items-center justify-center border-2 border-white shadow-sm">
+                    <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-linear-to-br from-indigo-600 to-blue-600 rounded-full flex items-center justify-center border-2 border-white shadow-sm">
                       <Shield className="w-3 h-3 text-white" />
                     </div>
                   )}
