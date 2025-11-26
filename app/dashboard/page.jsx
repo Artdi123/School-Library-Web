@@ -127,7 +127,7 @@ export default function DashboardContent() {
       setIsExporting(false);
     } catch (error) {
       console.error("Export failed:", error);
-      alert("Failed to export data. Please try again.");
+      alert("Failed to export data. Please try again Later.");
       setIsExporting(false);
     }
   }
