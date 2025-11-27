@@ -485,8 +485,8 @@ export default function BookDetail({ params }) {
       {/* Borrow Modal */}
       {showModal && (
         <BorrowModal
-          book={selectedBook}
-          onClose={closeBorrowModal}
+          book={book}
+          onClose={() => setShowModal(false)}
           onConfirm={confirmBorrow}
           borrowing={borrowing}
         />

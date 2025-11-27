@@ -119,7 +119,7 @@ export default function BorrowCard({ borrow }) {
           <div className="flex items-start justify-between gap-3 mb-3">
             <div className="flex-1 min-w-0">
               <Link href={`/book/${borrow.book_id}`}>
-                <h3 className="text-xl font-bold text-gray-900 mb-1 hover:text-indigo-600 transition-colors line-clamp-2">
+                <h3 className="text-xl font-bold text-gray-900 mb-1 hover:text-indigo-600 transition-colors line-clamp-1">
                   {borrow.book_name}
                 </h3>
               </Link>

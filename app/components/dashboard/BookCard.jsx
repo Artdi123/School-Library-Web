@@ -71,7 +71,7 @@ export default function BookCard({ book, onBorrow, isPending, isBorrowed }) {
 
       <div className="p-5">
         <Link href={`/book/${book.book_id}`}>
-          <h3 className="font-bold text-gray-900 text-lg mb-1 line-clamp-2 hover:text-indigo-600 transition-colors">
+          <h3 className="font-bold text-gray-900 text-lg mb-1 line-clamp-1 hover:text-indigo-600 transition-colors">
             {book.name}
           </h3>
         </Link>
