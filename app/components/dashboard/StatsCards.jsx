@@ -1,4 +1,3 @@
-// @/app/components/dashboard/StatsCards.jsx
 import { BookOpen, CheckCircle, Library } from "lucide-react";
 
 export default function StatsCards({

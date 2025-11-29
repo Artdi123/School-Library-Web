@@ -1,4 +1,3 @@
-// @/app/components/dashboard/BookCard.jsx
 import Image from "next/image";
 import Link from "next/link";
 import { Book, Tag, BookOpen, Calendar } from "lucide-react";

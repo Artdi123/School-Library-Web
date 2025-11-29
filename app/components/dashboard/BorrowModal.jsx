@@ -1,4 +1,3 @@
-// @/app/components/dashboard/BorrowModal.jsx
 import Image from "next/image";
 import { X, AlertCircle, Book, Tag } from "lucide-react";
 

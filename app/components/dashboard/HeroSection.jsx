@@ -1,4 +1,3 @@
-// @/app/components/dashboard/HeroSection.jsx
 "use client";
 
 import { BookOpen, Sparkles, TrendingUp } from "lucide-react";

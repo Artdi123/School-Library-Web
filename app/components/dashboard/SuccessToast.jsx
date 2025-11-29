@@ -1,4 +1,3 @@
-// @/app/components/dashboard/SuccessToast.jsx
 import { CheckCircle } from "lucide-react";
 
 export default function SuccessToast({ show, message, submessage }) {
